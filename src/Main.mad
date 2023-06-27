@@ -1,0 +1,16 @@
+import IO from "IO"
+import Wish from "Wish"
+
+import LCG from "./LCG"
+
+
+
+main = () => {
+  IO.putLine("Hello World!")
+  a = LCG.randomSeed()
+  b = LCG.randomSeed()
+  c = map(LCG.lcgPerturb(100))(a)
+  Wish.fulfill(IO.trace("bad"), IO.trace("good"), a)
+  // map(IO.trace("mathy math"))(LCG.randomInt(0, 100))
+  // map(IO.trace("seedy seeds"))(LCG.randomSeed())
+}
