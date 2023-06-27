@@ -8,30 +8,23 @@ import Number from "Number"
 import Wish from "Wish"
 
 
+// This code is heavily based upon: https://github.com/purescript/purescript-lcg/blob/master/src/Random/LCG.purs
+// which has a BSD-3 License - https://github.com/purescript/purescript-lcg/blob/master/LICENSE
 
 // A seed for the linear congruential generator. We omit a `Semiring`
 // instance because there is no `zero` value, as 0 is not an acceptable
 // seed for the generator.
-
 export type Seed = Seed(Integer)
 
 unSeed :: Seed -> Integer
-unSeed = where {
+export unSeed = where {
   Seed(x) =>
     x
 }
+
 interface Eq a => Seed a {
   compare :: a -> a -> ComparisonResult
 }
-/*
-instance Eq Seed {
-  eq = (a, b) => unSeed(a) == unSeed(b)
-}
-
-instance Comparable Seed {
-  compare = (a, b) => compare(unSeed(a), unSeed(b))
-}
-*/
 
 instance Show Seed {
   show = (seed) => where(seed) {
@@ -46,25 +39,25 @@ instance Show Seed {
 // be prime, because then the requirement of the initial seed being coprime
 // to the modulus is satisfied when the seed is between 1 and lcgM - 1.
 LCG_M :: Integer
-LCG_M = 2147483647
+export LCG_M = 2147483647
 
 SEED_MIN :: Integer
-SEED_MIN = 1
+export SEED_MIN = 1
 // The maximum permissible Seed value.
 SEED_MAX :: Integer
-SEED_MAX = LCG_M - 1
+export SEED_MAX = LCG_M - 1
 // The *multiplier*: a magic constant for the linear congruential generator
 LCG_A :: Integer
-LCG_A = 48271
+export LCG_A = 48271
 // The *increment*: a magic constant for the linear congruential generator
 LCG_C :: Integer
-LCG_C = 0
+export LCG_C = 0
 
 // Perturb a seed value
 // Note that `Integer` operations are truncated to 32-bits, so we convert to
 // `Number` for this calculation to avoid overflow errors.
-lcgPerturb :: Integer -> Seed -> Seed
-export lcgPerturb = (d, seed) => where(seed) {
+perturb :: Integer -> Seed -> Seed
+export perturb = (d, seed) => where(seed) {
   Seed(n) =>
     pipe(
       Math.mod(
@@ -75,29 +68,20 @@ export lcgPerturb = (d, seed) => where(seed) {
       Seed,
     )(LCG_M)
 }
-// lcgPerturb d (Seed n) =
-//   Seed $ unsafePartial fromJust $ fromNumber $
-//     (toNumber lcgA * toNumber n + toNumber d) % toNumber lcgM
-// Step the linear congruential generator
-step :: Seed -> Seed
-export step = lcgPerturb(LCG_C)
 
 ensureBetween :: Integer -> Integer -> Integer -> Integer
-ensureBetween = (min, max, x) => {
+export ensureBetween = (min, max, x) => {
   y = Math.mod(x, max - min)
   return y < min ? y + max : y
 }
 
-ensureSeedable = ensureBetween(SEED_MIN, SEED_MAX)
+export ensureSeedable = ensureBetween(SEED_MIN, SEED_MAX)
 
 mkSeed :: Integer -> Seed
-mkSeed = pipe(
+export mkSeed = pipe(
   ensureSeedable,
   Seed,
 )
-
-random :: {} -> Float
-export random = #- Math.random -#
 
 randomInt :: Integer -> Integer -> Wish String Integer
 export randomInt = (low, high) => pipe(
@@ -106,13 +90,17 @@ export randomInt = (low, high) => pipe(
   of,
 )(
   (Number.integerToFloat(high) - Number.integerToFloat(low) + 1.0)
-    * random()
+    * Math.random()
     + Number.integerToFloat(low),
 )
 
 // Create a random seed
-// randomSeed :: Effect Seed
-// randomSeed = mkSeed <$> randomInt seedMin seedMax
-
 randomSeed :: {} -> Wish String Seed
-export randomSeed = () => map(mkSeed)(randomInt(SEED_MIN, SEED_MAX))
+export randomSeed = () => pipe(
+  randomInt(SEED_MIN),
+  map(mkSeed),
+)(SEED_MAX)
+
+// next the linear congruential generator
+next :: Seed -> Seed
+export next = perturb(LCG_C)

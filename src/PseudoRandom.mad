@@ -1,0 +1,9 @@
+import type { Seed } from "./LCG"
+
+
+
+export type RandomPair a = Pair(Seed, a)
+
+interface Random a {
+  random :: Seed -> RandomPair a
+}
