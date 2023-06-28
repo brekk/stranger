@@ -1,9 +1,23 @@
 import type { Seed } from "./LCG"
 
+import Number from "Number"
+
+import LCG from "./LCG"
 
 
-export type RandomPair a = Pair(Seed, a)
 
-interface Random a {
-  random :: Seed -> RandomPair a
-}
+export alias RandomPair a = #[Seed, a]
+
+stepInt :: Seed -> RandomPair Integer
+export stepInt = (seed) => #[LCG.next(seed), LCG.unSeed(seed)]
+/*
+stepFloat :: Seed -> Float -> RandomPair Float
+export stepFloat = (seed, n) => #[
+  pipe(
+    LCG.next,
+  )(seed),
+  pipe(
+    
+  )
+]
+*/

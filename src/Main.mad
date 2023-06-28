@@ -1,19 +1,27 @@
 import IO from "IO"
-import Wish from "Wish"
+import List from "List"
+// import Math from "Math"
+import { Just, Nothing } from "Maybe"
+// import Number from "Number"
+// import Wish from "Wish"
 
 import LCG from "./LCG"
+// import { stepInt } from "./PseudoRandom"
 
 
 
 main = () => {
   IO.putLine("Hello World!")
-  a = LCG.randomSeed()
-  b = LCG.randomSeed()
-  c = map(LCG.next)(a)
-  pipe(
-    Wish.parallel,
-    Wish.fulfill((x) => { IO.trace("bad", x) }, (x) => { IO.trace("good", x) }),
-  )([a, b, c])
-  // map(IO.trace("mathy math"))(LCG.randomInt(0, 100))
-  // map(IO.trace("seedy seeds"))(LCG.randomSeed())
+  numberRun = List.reduce(
+    (agg, a) => where(List.last(agg)) {
+      Just(x) =>
+        [...agg, LCG.next(x)]
+
+      Nothing =>
+        agg
+    },
+    [LCG.mkSeed(100)],
+  )
+  numberRun(List.range(0, 10)) |> IO.trace("HEY NOW")
+  numberRun(List.range(0, 10)) |> IO.trace("HEY NOW 2")
 }

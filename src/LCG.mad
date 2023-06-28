@@ -94,8 +94,10 @@ export randomInt = (low, high) => pipe(
     + Number.integerToFloat(low),
 )
 
+alias Seeded = Wish String Seed
+
 // Create a random seed
-randomSeed :: {} -> Wish String Seed
+randomSeed :: {} -> Seeded
 export randomSeed = () => pipe(
   randomInt(SEED_MIN),
   map(mkSeed),
