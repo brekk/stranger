@@ -1,16 +1,74 @@
 import type { Seed } from "./LCG"
 
-import Number from "Number"
+import Tuple from "Tuple"
+import List from "List"
 import Math from "Math"
+import { Just, Nothing } from "Maybe"
+import Number from "Number"
 import Wish from "Wish"
 
 import LCG from "./LCG"
 
-export alias SeedGenerator a = Seed -> Generator a
 
-export alias Generator a = {} -> a
 
-integerWithGenerator :: Generator Integer -> Integer -> Integer -> Integer
+export alias NumberGenerator a = {} -> a
+export alias SeedGenerator a = Seed -> NumberGenerator a
+export alias Async a = Wish String a
+
+create :: Integer -> Async Seed
+export create = pipe(
+  LCG.mkSeed,
+  of,
+)
+
+step :: Async Seed -> Async Seed
+export step = map(LCG.next)
+
+stepN :: Integer -> Async Seed -> Async Seed
+export stepN = (steps, mSeed) => pipe(
+  List.range(0),
+  List.reduce((prev, _) => step(prev), mSeed),
+)(steps)
+
+alias SeededTuple a = #[Seed, a]
+
+seedTuple :: Seed -> a -> SeededTuple a
+export seedTuple = (seed, a) => #[seed, a]
+
+stepFn :: (Seed -> a) -> Seed -> SeededTuple a
+export stepFn = (fn, seed) => #[LCG.next(seed), fn(seed)]
+
+stepFnN :: Integer -> (Seed -> a) -> Async Seed -> Async (List (SeededTuple a))
+export stepFnN = (steps, fn, mSeed) => map(
+  (seed) => pipe(
+    List.range(0),
+    List.reduce(
+      (agg, _) => pipe(
+        stepFn(fn),
+        where {
+          #[newSeed, x] =>
+            ({ prev: newSeed, stack: [...agg.stack, #[newSeed, x]] })
+        },
+      )(agg.prev),
+      { stack: [], prev: seed },
+    ),
+    .stack,
+  )(steps + 1),
+  mSeed,
+)
+
+seededValues :: List (SeededTuple a) -> List a
+seededValues = map(Tuple.snd)
+
+floatFromSeed :: Seed -> Float
+export floatFromSeed = pipe(
+  LCG.next,
+  LCG.unSeed,
+  (x) => (x / LCG.LCG_M),
+)
+
+
+integerWithGenerator :: NumberGenerator Float -> Integer -> Integer -> Integer
 export integerWithGenerator = (r, low, high) => pipe(
   Math.floor,
   Number.floatToInteger,

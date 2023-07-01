@@ -64,7 +64,7 @@ export unSeed = where {
 }
 
 perturbation :: Integer -> Integer -> Integer -> Integer -> Integer
-perturbation = (b, n, a, d) => pipe(
+perturbation = (n, b, a, d) => pipe(
   map(Number.integerToFloat),
   where {
     [b2, n2, a2] =>
@@ -80,7 +80,7 @@ perturbation = (b, n, a, d) => pipe(
 perturb :: Integer -> Seed -> Seed
 export perturb = (d, seed) => pipe(
   unSeed,
-  perturbation(LCG_A, $, d, LCG_M),
+  perturbation($, LCG_A, d, LCG_M),
   Seed,
 )(seed)
 
