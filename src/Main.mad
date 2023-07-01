@@ -1,27 +1,24 @@
+import { EQUAL, LESS, MORE } from "Compare"
 import IO from "IO"
 import List from "List"
 // import Math from "Math"
-import { Just, Nothing } from "Maybe"
+import {
+  Just,
+  Nothing,
+} from "Maybe"
+import Tuple from "Tuple"
+import Wish from "Wish"
+
 // import Number from "Number"
 // import Wish from "Wish"
 
 import LCG from "./LCG"
-// import { stepInt } from "./PseudoRandom"
+// import { stepFloat, stepInt } from "./PseudoRandom"
+// import { integerWithGenerator } from "./PseudoRandom"
 
 
 
 main = () => {
-  IO.putLine("Hello World!")
-  numberRun = List.reduce(
-    (agg, a) => where(List.last(agg)) {
-      Just(x) =>
-        [...agg, LCG.next(x)]
 
-      Nothing =>
-        agg
-    },
-    [LCG.mkSeed(100)],
-  )
-  numberRun(List.range(0, 10)) |> IO.trace("HEY NOW")
-  numberRun(List.range(0, 10)) |> IO.trace("HEY NOW 2")
+  // IO.trace("x", x)
 }

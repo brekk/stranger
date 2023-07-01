@@ -1,23 +1,21 @@
 import type { Seed } from "./LCG"
 
 import Number from "Number"
+import Math from "Math"
+import Wish from "Wish"
 
 import LCG from "./LCG"
 
+export alias SeedGenerator a = Seed -> Generator a
 
+export alias Generator a = {} -> a
 
-export alias RandomPair a = #[Seed, a]
-
-stepInt :: Seed -> RandomPair Integer
-export stepInt = (seed) => #[LCG.next(seed), LCG.unSeed(seed)]
-/*
-stepFloat :: Seed -> Float -> RandomPair Float
-export stepFloat = (seed, n) => #[
-  pipe(
-    LCG.next,
-  )(seed),
-  pipe(
-    
-  )
-]
-*/
+integerWithGenerator :: Generator Integer -> Integer -> Integer -> Integer
+export integerWithGenerator = (r, low, high) => pipe(
+  Math.floor,
+  Number.floatToInteger,
+)(
+  (Number.integerToFloat(high) - Number.integerToFloat(low) + 1.0)
+    * r()
+    + Number.integerToFloat(low),
+)

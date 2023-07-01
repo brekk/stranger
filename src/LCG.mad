@@ -1,26 +1,48 @@
 import type { ComparisonResult } from "Compare"
-import type { Wish } from "Wish"
 
 import IO from "IO"
 import Math from "Math"
 import { Just, Nothing } from "Maybe"
 import Number from "Number"
-import Wish from "Wish"
+
 
 
 // This code is heavily based upon: https://github.com/purescript/purescript-lcg/blob/master/src/Random/LCG.purs
 // which has a BSD-3 License - https://github.com/purescript/purescript-lcg/blob/master/LICENSE
+
+// ## Constants
+
+// The *modulus*: a magic constant for the linear congruential generator.
+// It is equal to 2^31 - 1, a Mersenne prime. It is useful for this value to
+// be prime, because then the requirement of the initial seed being coprime
+// to the modulus is satisfied when the seed is between 1 and LCG_M - 1.
+LCG_M :: Integer
+export LCG_M = 2147483647
+
+// The minimum permissible Seed value
+SEED_MIN :: Integer
+export SEED_MIN = 1
+
+// The maximum permissible Seed value
+SEED_MAX :: Integer
+export SEED_MAX = LCG_M - 1
+
+// The *multiplier*: a magic constant for the linear congruential generator
+LCG_A :: Integer
+export LCG_A = 48271
+
+// The *increment*: a magic constant for the linear congruential generator
+LCG_C :: Integer
+export LCG_C = 0
+
+// ## Types
 
 // A seed for the linear congruential generator. We omit a `Semiring`
 // instance because there is no `zero` value, as 0 is not an acceptable
 // seed for the generator.
 export type Seed = Seed(Integer)
 
-unSeed :: Seed -> Integer
-export unSeed = where {
-  Seed(x) =>
-    x
-}
+// ## Interfaces
 
 interface Eq a => Seed a {
   compare :: a -> a -> ComparisonResult
@@ -33,41 +55,34 @@ instance Show Seed {
   }
 }
 
+// ## Logic
 
-// The *modulus*: a magic constant for the linear congruential generator.
-// It is equal to 2^31 - 1, a Mersenne prime. It is useful for this value to
-// be prime, because then the requirement of the initial seed being coprime
-// to the modulus is satisfied when the seed is between 1 and lcgM - 1.
-LCG_M :: Integer
-export LCG_M = 2147483647
+unSeed :: Seed -> Integer
+export unSeed = where {
+  Seed(x) =>
+    x
+}
 
-SEED_MIN :: Integer
-export SEED_MIN = 1
-// The maximum permissible Seed value.
-SEED_MAX :: Integer
-export SEED_MAX = LCG_M - 1
-// The *multiplier*: a magic constant for the linear congruential generator
-LCG_A :: Integer
-export LCG_A = 48271
-// The *increment*: a magic constant for the linear congruential generator
-LCG_C :: Integer
-export LCG_C = 0
+perturbation :: Integer -> Integer -> Integer -> Integer -> Integer
+perturbation = (b, n, a, d) => pipe(
+  map(Number.integerToFloat),
+  where {
+    [b2, n2, a2] =>
+      Number.floatToInteger(b2 * n2 + a2)
+
+    _ =>
+      0
+  },
+  Math.mod($, d),
+)([b, n, a])
 
 // Perturb a seed value
-// Note that `Integer` operations are truncated to 32-bits, so we convert to
-// `Number` for this calculation to avoid overflow errors.
 perturb :: Integer -> Seed -> Seed
-export perturb = (d, seed) => where(seed) {
-  Seed(n) =>
-    pipe(
-      Math.mod(
-        Number.floatToInteger(
-          Number.integerToFloat(LCG_A) * Number.integerToFloat(n) + Number.integerToFloat(d),
-        ),
-      ),
-      Seed,
-    )(LCG_M)
-}
+export perturb = (d, seed) => pipe(
+  unSeed,
+  perturbation(LCG_A, $, d, LCG_M),
+  Seed,
+)(seed)
 
 ensureBetween :: Integer -> Integer -> Integer -> Integer
 export ensureBetween = (min, max, x) => {
@@ -82,26 +97,6 @@ export mkSeed = pipe(
   ensureSeedable,
   Seed,
 )
-
-randomInt :: Integer -> Integer -> Wish String Integer
-export randomInt = (low, high) => pipe(
-  Math.floor,
-  Number.floatToInteger,
-  of,
-)(
-  (Number.integerToFloat(high) - Number.integerToFloat(low) + 1.0)
-    * Math.random()
-    + Number.integerToFloat(low),
-)
-
-alias Seeded = Wish String Seed
-
-// Create a random seed
-randomSeed :: {} -> Seeded
-export randomSeed = () => pipe(
-  randomInt(SEED_MIN),
-  map(mkSeed),
-)(SEED_MAX)
 
 // next the linear congruential generator
 next :: Seed -> Seed
