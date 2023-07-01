@@ -57,4 +57,19 @@ main = () => {
     PRNG.stepFnN(10, PRNG.randomInt(0, 100)),
     map(PRNG.seededValues)
   ))
+  run("booleans", 100, pipe(
+    PRNG.stepFnN(10, PRNG.randomBool),
+    map(PRNG.seededValues)
+  ))
+  // map(PRNG.randomPick(['a', 'b', 'c', 'd', 'e', 'f'])),
+  run("pick!", 100, pipe(
+    PRNG.stepFnN(100, pipe(
+      PRNG.randomPick(['a', 'b', 'c', 'd', 'e', 'f']),
+      where {
+        Just(x) => x
+        Nothing => 'x'
+      }
+    )),
+    map(PRNG.seededValues)
+  ))
 }

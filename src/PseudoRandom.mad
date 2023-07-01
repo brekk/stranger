@@ -1,3 +1,4 @@
+import type { Maybe } from "Maybe"
 import type { Seed } from "./LCG"
 
 import Tuple from "Tuple"
@@ -84,3 +85,13 @@ export randomInt = (low, high, seed) => pipe(
   boundIntFromSeed(low, high)
 )(seed)
 
+randomBool :: Seed -> Boolean
+export randomBool = pipe(
+  floatFromSeed,
+  (f) => f > 0.5
+)
+
+randomPick :: List a -> Seed -> Maybe a
+export randomPick = (list, seed) => pipe(
+  List.nth(randomInt(0, List.length(list) - 1, seed)),
+)(list)
