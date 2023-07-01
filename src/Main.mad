@@ -8,15 +8,13 @@ import Wish from "Wish"
 
 // import Number from "Number"
 // import Wish from "Wish"
+import type { Async } from "./PseudoRandom"
+import type { Seed } from "./LCG"
 
 import LCG from "./LCG"
 import PRNG from "./PseudoRandom"
 
-
-
-// import { stepFloat, stepInt } from "./PseudoRandom"
-// import { integerWithGenerator } from "./PseudoRandom"
-
+run :: Inspect a => String -> Integer -> (Wish String Seed -> Wish String a) -> {}
 run = (key, seedNumber, fn) => pipe(
   PRNG.create,
   map(IO.trace(`${key} -->`)),
@@ -47,4 +45,16 @@ main = () => {
     ),
   )
   run("D", 100, PRNG.stepFnN(4, PRNG.floatFromSeed))
+  run("E", 100, pipe(
+    PRNG.stepFnN(4, PRNG.floatFromSeed),
+    map(PRNG.seededValues)
+  ))
+  run("INTEGER (step 4)", 100, pipe(
+    PRNG.stepN(4),
+    map(PRNG.randomInt(0, 100))
+  ))
+  run("INTEGERS", 100, pipe(
+    PRNG.stepFnN(10, PRNG.randomInt(0, 100)),
+    map(PRNG.seededValues)
+  ))
 }
