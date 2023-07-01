@@ -1,0 +1,23 @@
+import type { ComparisonResult } from "Compare"
+
+import Wish from "Wish"
+
+
+
+// A seed for the linear congruential generator. We omit a `Semiring`
+// instance because there is no `zero` value, as 0 is not an acceptable
+// seed for the generator.
+export type Seed = Seed(Integer)
+
+interface Eq a => Seed a {
+  compare :: a -> a -> ComparisonResult
+}
+
+instance Show Seed {
+  show = (seed) => where(seed) {
+    Seed(i) =>
+      show(i)
+  }
+}
+
+export alias Async a = Wish String a

@@ -1,0 +1,24 @@
+import List from "List"
+import { mod } from "Math"
+import { floatToInteger, integerToFloat } from "Number"
+
+
+
+perturbation :: Integer -> Integer -> Integer -> Integer -> Integer
+export perturbation = (n, b, a, d) => pipe(
+  map(integerToFloat),
+  where {
+    [b2, n2, a2] =>
+      floatToInteger(b2 * n2 + a2)
+
+    _ =>
+      0
+  },
+  mod($, d),
+)([b, n, a])
+
+ensureBetween :: Integer -> Integer -> Integer -> Integer
+export ensureBetween = (min, max, x) => {
+  y = mod(x, max - min)
+  return y < min ? y + max : y
+}

@@ -1,20 +1,16 @@
 import type { Maybe } from "Maybe"
-import type { Seed } from "./LCG"
 
-import Tuple from "Tuple"
+import type { Async, Seed } from "./Types"
+
 import List from "List"
 import Math from "Math"
-import { Just, Nothing } from "Maybe"
 import Number from "Number"
-import Wish from "Wish"
+import Tuple from "Tuple"
 
+import { LCG_M } from "./Constants"
 import LCG from "./LCG"
 
 
-
-export alias NumberGenerator a = {} -> a
-export alias SeedGenerator a = Seed -> NumberGenerator a
-export alias Async a = Wish String a
 
 create :: Integer -> Async Seed
 export create = pipe(
@@ -65,30 +61,25 @@ floatFromSeed :: Seed -> Float
 export floatFromSeed = pipe(
   LCG.next,
   LCG.unSeed,
-  (x) => (x / LCG.LCG_M),
+  (x) => (x / LCG_M),
 )
-
 
 boundIntFromSeed :: Integer -> Integer -> Float -> Integer
 export boundIntFromSeed = (low, high, f) => pipe(
   Math.floor,
   Number.floatToInteger,
-)(
-  (Number.integerToFloat(high) - Number.integerToFloat(low) + 1.0)
-    * f
-    + Number.integerToFloat(low),
-)
+)((Number.integerToFloat(high) - Number.integerToFloat(low) + 1.0) * f + Number.integerToFloat(low))
 
 randomInt :: Integer -> Integer -> Seed -> Integer
 export randomInt = (low, high, seed) => pipe(
   floatFromSeed,
-  boundIntFromSeed(low, high)
+  boundIntFromSeed(low, high),
 )(seed)
 
 randomBool :: Seed -> Boolean
 export randomBool = pipe(
   floatFromSeed,
-  (f) => f > 0.5
+  (f) => f > 0.5,
 )
 
 randomPick :: List a -> Seed -> Maybe a

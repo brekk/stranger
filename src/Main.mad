@@ -8,11 +8,10 @@ import Wish from "Wish"
 
 // import Number from "Number"
 // import Wish from "Wish"
-import type { Async } from "./PseudoRandom"
-import type { Seed } from "./LCG"
+import type { Async, Seed } from "./Types"
 
 import LCG from "./LCG"
-import PRNG from "./PseudoRandom"
+import PRNG from "./PRNG"
 
 run :: Inspect a => String -> Integer -> (Wish String Seed -> Wish String a) -> {}
 run = (key, seedNumber, fn) => pipe(
