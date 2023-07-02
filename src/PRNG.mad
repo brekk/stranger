@@ -8,7 +8,7 @@ import Tuple from "Tuple"
 import { LCG_M } from "./Constants"
 import LCG from "./LCG"
 import { maybeSetIndex } from "./List"
-import { boundedInt } from "./Logic"
+import { intGradient } from "./Logic"
 
 
 
@@ -135,7 +135,7 @@ export floatFromSeed = pipe(
 randomInt :: Integer -> Integer -> Seed -> Integer
 export randomInt = (low, high, seed) => pipe(
   floatFromSeed,
-  boundedInt(low, high),
+  intGradient(low, high),
 )(seed)
 
 /**

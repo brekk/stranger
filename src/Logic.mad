@@ -26,13 +26,14 @@ export perturbation = (n, b, a, d) => pipe(
  * Clamp a number between two boundaries
  * @since 0.0.1
  * @example
- * clamp(5, 10, 100)
+ * modClamp(5, 10, 100)
  */
-clamp :: Integer -> Integer -> Integer -> Integer
-export clamp = (min, max, x) => {
+modClamp :: Integer -> Integer -> Integer -> Integer
+export modClamp = (min, max, x) => {
   y = mod(x, max - min)
   return y < min ? y + max : y
 }
+
 
 /**
  * Get a value between two boundaries, low and high.
@@ -41,10 +42,10 @@ export clamp = (min, max, x) => {
  * on each generation.
  * @since 0.0.1
  * @example
- * boundedInt(1, 100, 0.5)
+ * intGradient(1, 100, 0.5)
  */
-boundedInt :: Integer -> Integer -> Float -> Integer
-export boundedInt = (low, high, f) => pipe(
+intGradient :: Integer -> Integer -> Float -> Integer
+export intGradient = (low, high, f) => pipe(
   floor,
   floatToInteger,
 )((integerToFloat(high) - integerToFloat(low) + 1.0) * f + integerToFloat(low))

@@ -1,0 +1,19 @@
+import { assertEquals, test } from "Test"
+
+import { LCG_A, LCG_C, LCG_M } from "./Constants"
+import { intGradient, modClamp, perturbation } from "./Logic"
+import { Seed } from "./Types"
+
+
+
+test("perturbation", () => assertEquals(perturbation(LCG_C, LCG_A, 23, LCG_M), 23))
+test("perturbation zeroes", () => assertEquals(perturbation(0, 0, 0, 1), 0))
+test("perturbation ones", () => assertEquals(perturbation(1, 2, 3, 2), 1))
+
+test("modClamp - basic", () => assertEquals(2, modClamp(1, 2, 1)))
+test("modClamp - over", () => assertEquals(LCG_M + 1000, modClamp(LCG_A, LCG_M, 1000)))
+test("modClamp - under", () => assertEquals(3, modClamp(1, 21, 3)))
+
+test("intGradient", () => assertEquals(500, intGradient(0, 1000, 0.5)))
+test("intGradient - 0", () => assertEquals(0, intGradient(0, 1000, 0)))
+test("intGradient - 1.0", () => assertEquals(1001, intGradient(0, 1000, 1.0)))

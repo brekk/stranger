@@ -1,7 +1,7 @@
 import type { Seed } from "./Types"
 
 import { LCG_A, LCG_C, LCG_M, SEED_MAX, SEED_MIN } from "./Constants"
-import { clamp, perturbation } from "./Logic"
+import { modClamp, perturbation } from "./Logic"
 import { Seed } from "./Types"
 
 
@@ -17,7 +17,7 @@ import { Seed } from "./Types"
  */
 mkSeed :: Integer -> Seed
 export mkSeed = pipe(
-  clamp(SEED_MIN, SEED_MAX),
+  modClamp(SEED_MIN, SEED_MAX),
   Seed,
 )
 
@@ -47,7 +47,7 @@ export seedMap = (fn, seed) => pipe(
 )(seed)
 
 /**
- * Perturb a seed value (use math to produce another internal generator value)
+ * Perturb a seed value to produce another internal generator value
  * @since 0.0.1
  * @example
  * LCG.perturb(LCG_C, LCG.mkSeed(100))
