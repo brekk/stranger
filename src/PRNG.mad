@@ -2,13 +2,14 @@ import type { Maybe } from "Maybe"
 
 import type { Async, Seed } from "./Types"
 
+import IO from "IO"
 import List from "List"
-import Math from "Math"
-import Number from "Number"
+import { Just, Nothing } from "Maybe"
 import Tuple from "Tuple"
 
 import { LCG_M } from "./Constants"
 import LCG from "./LCG"
+import { boundedInt } from "./Logic"
 
 
 
@@ -32,16 +33,16 @@ alias SeededTuple a = #[Seed, a]
 seedTuple :: Seed -> a -> SeededTuple a
 export seedTuple = (seed, a) => #[seed, a]
 
-stepFn :: (Seed -> a) -> Seed -> SeededTuple a
-export stepFn = (fn, seed) => #[LCG.next(seed), fn(seed)]
+mapStep :: (Seed -> a) -> Seed -> SeededTuple a
+export mapStep = (fn, seed) => #[LCG.next(seed), fn(seed)]
 
-stepFnN :: Integer -> (Seed -> a) -> Async Seed -> Async (List (SeededTuple a))
-export stepFnN = (steps, fn, mSeed) => map(
+mapSteps :: Integer -> (Seed -> a) -> Async Seed -> Async (List (SeededTuple a))
+export mapSteps = (steps, fn, mSeed) => map(
   (seed) => pipe(
     List.range(0),
     List.reduce(
       (agg, _) => pipe(
-        stepFn(fn),
+        mapStep(fn),
         where {
           #[newSeed, x] =>
             ({ prev: newSeed, stack: [...agg.stack, #[newSeed, x]] })
@@ -54,8 +55,8 @@ export stepFnN = (steps, fn, mSeed) => map(
   mSeed,
 )
 
-seededValues :: List (SeededTuple a) -> List a
-export seededValues = map(Tuple.snd)
+dropSeeds :: List (SeededTuple a) -> List a
+export dropSeeds = map(Tuple.snd)
 
 floatFromSeed :: Seed -> Float
 export floatFromSeed = pipe(
@@ -64,16 +65,10 @@ export floatFromSeed = pipe(
   (x) => (x / LCG_M),
 )
 
-boundIntFromSeed :: Integer -> Integer -> Float -> Integer
-export boundIntFromSeed = (low, high, f) => pipe(
-  Math.floor,
-  Number.floatToInteger,
-)((Number.integerToFloat(high) - Number.integerToFloat(low) + 1.0) * f + Number.integerToFloat(low))
-
 randomInt :: Integer -> Integer -> Seed -> Integer
 export randomInt = (low, high, seed) => pipe(
   floatFromSeed,
-  boundIntFromSeed(low, high),
+  boundedInt(low, high),
 )(seed)
 
 randomBool :: Seed -> Boolean
@@ -85,4 +80,40 @@ export randomBool = pipe(
 randomPick :: List a -> Seed -> Maybe a
 export randomPick = (list, seed) => pipe(
   List.nth(randomInt(0, List.length(list) - 1, seed)),
+)(list)
+
+setIndex :: Integer -> a -> List a -> List a
+export setIndex = (n, val, list) => List.mapWithIndex((x, i) => i == n ? val : x, list)
+
+maybeSetIndex :: Integer -> Maybe a -> List a -> List a
+export maybeSetIndex = (n, mV, list) => where(mV) {
+  Just(x) =>
+    setIndex(n, x, list)
+
+  Nothing =>
+    list
+}
+
+randomShuffle :: List a -> Seed -> List a
+export randomShuffle = (list, seed) => pipe(
+  List.reduce(
+    (agg, _) => {
+      max = List.length(list) - 1
+      x = randomInt(1, max, agg.current)
+      next = LCG.next(agg.current)
+      y = randomInt(1, max, next)
+      fromStack = List.nth($, agg.stack)
+      nthX = fromStack(x)
+      nthY = fromStack(y)
+      return {
+        stack: pipe(
+          maybeSetIndex(y, nthX),
+          maybeSetIndex(x, nthY),
+        )(agg.stack),
+        current: next,
+      }
+    },
+    { stack: list, current: seed },
+  ),
+  .stack,
 )(list)

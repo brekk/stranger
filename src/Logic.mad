@@ -1,5 +1,5 @@
-import List from "List"
-import { mod } from "Math"
+import {} from "List"
+import { mod, floor } from "Math"
 import { floatToInteger, integerToFloat } from "Number"
 
 
@@ -22,3 +22,11 @@ export ensureBetween = (min, max, x) => {
   y = mod(x, max - min)
   return y < min ? y + max : y
 }
+
+
+boundedInt :: Integer -> Integer -> Float -> Integer
+export boundedInt = (low, high, f) => pipe(
+  floor,
+  floatToInteger,
+)((integerToFloat(high) - integerToFloat(low) + 1.0) * f + integerToFloat(low))
+
