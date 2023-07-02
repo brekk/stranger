@@ -1,19 +1,44 @@
 import type { Seed } from "./Types"
-import { Seed } from "./Types"
-import { LCG_C, LCG_A, LCG_M, SEED_MIN, SEED_MAX } from "./Constants"
+
+import { LCG_A, LCG_C, LCG_M, SEED_MAX, SEED_MIN } from "./Constants"
 import { ensureBetween, perturbation } from "./Logic"
+import { Seed } from "./Types"
+
 
 
 // This code partially based upon: https://github.com/purescript/purescript-lcg/blob/master/src/Random/LCG.purs
 // which has a BSD-3 License - https://github.com/purescript/purescript-lcg/blob/master/LICENSE
 
+/**
+ * Make a Seed from an integer
+ * @since 0.0.1
+ * @example
+ * LCG.mkSeed(100)
+ */
+mkSeed :: Integer -> Seed
+export mkSeed = pipe(
+  ensureBetween(SEED_MIN, SEED_MAX),
+  Seed,
+)
 
+/**
+ * Pull the internal value from a Seed
+ * @since 0.0.1
+ * @example
+ * LCG.unSeed(LCG.mkSeed(100))
+ */
 unSeed :: Seed -> Integer
 export unSeed = where {
   Seed(x) =>
     x
 }
 
+/**
+ * Transform a seed
+ * @since 0.0.1
+ * @example
+ * LCG.seedMap((x) => x * 2, LCG.mkSeed(100))
+ */
 seedMap :: (Integer -> Integer) -> Seed -> Seed
 export seedMap = (fn, seed) => pipe(
   unSeed,
@@ -21,21 +46,21 @@ export seedMap = (fn, seed) => pipe(
   Seed,
 )(seed)
 
-// Perturb a seed value
+/**
+ * Perturb a seed value (use math to produce another internal generator value)
+ * @since 0.0.1
+ * @example
+ * LCG.perturb(LCG_C, LCG.mkSeed(100))
+ */
 perturb :: Integer -> Seed -> Seed
-export perturb = (d, seed) => seedMap(
-  perturbation($, LCG_A, d, LCG_M),
-)(seed)
+export perturb = (d, seed) => seedMap(perturbation($, LCG_A, d, LCG_M))(seed)
 
-export ensureSeedable = ensureBetween(SEED_MIN, SEED_MAX)
 
-mkSeed :: Integer -> Seed
-export mkSeed = pipe(
-  ensureSeedable,
-  Seed,
-)
-
-// next the linear congruential generator
+/**
+ * Move the internal seed value forward by one perturbation
+ * @since 0.0.1
+ * @example
+ * LCG.next(LCG.mkSeed(100))
+ */
 next :: Seed -> Seed
 export next = perturb(LCG_C)
-

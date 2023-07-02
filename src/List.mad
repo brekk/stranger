@@ -1,0 +1,30 @@
+import type { Maybe } from "Maybe"
+
+import List from "List"
+import { Just, Nothing } from "Maybe"
+
+
+
+/**
+ * Set a value at an index in a list
+ * @since 0.0.1
+ * @example
+ * List.setIndex(2, 100, [1,2,3,4,5])
+ */
+setIndex :: Integer -> a -> List a -> List a
+export setIndex = (n, val, list) => List.mapWithIndex((x, i) => i == n ? val : x, list)
+
+/**
+ * Set a value at an index in a list, if given a concrete value
+ * @since 0.0.1
+ * @example
+ * List.maybeSetIndex(2, Just(100), [1,2,3,4,5])
+ */
+maybeSetIndex :: Integer -> Maybe a -> List a -> List a
+export maybeSetIndex = (n, mV, list) => where(mV) {
+  Just(x) =>
+    setIndex(n, x, list)
+
+  Nothing =>
+    list
+}
