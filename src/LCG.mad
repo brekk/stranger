@@ -1,7 +1,7 @@
 import type { Seed } from "./Types"
 
 import { LCG_A, LCG_C, LCG_M, SEED_MAX, SEED_MIN } from "./Constants"
-import { ensureBetween, perturbation } from "./Logic"
+import { clamp, perturbation } from "./Logic"
 import { Seed } from "./Types"
 
 
@@ -17,7 +17,7 @@ import { Seed } from "./Types"
  */
 mkSeed :: Integer -> Seed
 export mkSeed = pipe(
-  ensureBetween(SEED_MIN, SEED_MAX),
+  clamp(SEED_MIN, SEED_MAX),
   Seed,
 )
 

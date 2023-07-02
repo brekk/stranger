@@ -1,9 +1,14 @@
 import {} from "List"
-import { mod, floor } from "Math"
+import { floor, mod } from "Math"
 import { floatToInteger, integerToFloat } from "Number"
 
 
 
+/**
+ * This is the core logic for the "perturb" function used in the LCG
+ * It is fundamentally applying (b * n + a) % d
+ * @since 0.0.1
+ */
 perturbation :: Integer -> Integer -> Integer -> Integer -> Integer
 export perturbation = (n, b, a, d) => pipe(
   map(integerToFloat),
@@ -17,16 +22,29 @@ export perturbation = (n, b, a, d) => pipe(
   mod($, d),
 )([b, n, a])
 
-ensureBetween :: Integer -> Integer -> Integer -> Integer
-export ensureBetween = (min, max, x) => {
+/**
+ * Clamp a number between two boundaries
+ * @since 0.0.1
+ * @example
+ * clamp(5, 10, 100)
+ */
+clamp :: Integer -> Integer -> Integer -> Integer
+export clamp = (min, max, x) => {
   y = mod(x, max - min)
   return y < min ? y + max : y
 }
 
-
+/**
+ * Get a value between two boundaries, low and high.
+ * Here the floating value is being used as a multiplier and this function is pure.
+ * But upstream this function is used within a PRNG and the supplied floating value changes
+ * on each generation.
+ * @since 0.0.1
+ * @example
+ * boundedInt(1, 100, 0.5)
+ */
 boundedInt :: Integer -> Integer -> Float -> Integer
 export boundedInt = (low, high, f) => pipe(
   floor,
   floatToInteger,
 )((integerToFloat(high) - integerToFloat(low) + 1.0) * f + integerToFloat(low))
-
