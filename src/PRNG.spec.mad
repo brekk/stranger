@@ -1,0 +1,57 @@
+import { assertEquals, test } from "Test"
+import Wish from "Wish"
+
+import LCG from "./LCG"
+import { create, mapStep, mapSteps, seedTuple, step, stepN } from "./PRNG"
+import { Seed } from "./Types"
+
+
+
+test(
+  "create",
+  () => pipe(
+    chain(assertEquals($, Seed(100))),
+  )(create(100)),
+)
+
+test(
+  "step",
+  () => pipe(
+    step,
+    chain(assertEquals($, Seed(4827100))),
+  )(create(100)),
+)
+
+test(
+  "stepN",
+  () => pipe(
+    stepN(5),
+    chain(assertEquals($, Seed(1708473988))),
+  )(create(100)),
+)
+
+test(
+  "seedTuple",
+  () => pipe(
+    seedTuple($, "cool"),
+    assertEquals($, #[Seed(100), "cool"]),
+  )(LCG.mkSeed(100)),
+)
+
+test(
+  "mapStep",
+  () => pipe(
+    map(mapStep((x) => LCG.unSeed(x) * 2)),
+    chain(assertEquals($, #[Seed(4827100), 200])),
+  )(create(100)),
+)
+
+/*
+test(
+  "mapSteps",
+  () => pipe(
+    map(mapSteps(3, (x) => LCG.unSeed(x) * 2)),
+    chain(assertEquals($, [])),
+  )(create(100)),
+)
+*/

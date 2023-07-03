@@ -1,6 +1,7 @@
 import type { Maybe } from "Maybe"
+import type { Wish } from "Wish"
 
-import type { Async, Seed } from "./Types"
+import type { Seed, SeededTuple } from "./Types"
 
 import List from "List"
 import Tuple from "Tuple"
@@ -18,7 +19,7 @@ import { intGradient } from "./Logic"
  * @example
  * PRNG.create(100)
  */
-create :: Integer -> Async Seed
+create :: Integer -> Wish a Seed
 export create = pipe(
   LCG.mkSeed,
   of,
@@ -33,8 +34,8 @@ export create = pipe(
  *   PRNG.step
  * )(100)
  */
-step :: Async Seed -> Async Seed
-export step = map(LCG.next)
+step :: Wish a Seed -> Wish a Seed
+export step = (mSeed) => map(LCG.next)(mSeed)
 
 /**
  * Step a given PRNG multiple generations forward
@@ -45,17 +46,11 @@ export step = map(LCG.next)
  *   PRNG.stepN(10)
  * )(100)
  */
-stepN :: Integer -> Async Seed -> Async Seed
+stepN :: Integer -> Wish a Seed -> Wish a Seed
 export stepN = (steps, mSeed) => pipe(
   List.range(0),
   List.reduce((prev, _) => step(prev), mSeed),
 )(steps)
-
-/**
- * A SeededTuple is used to encapsulate a value relative to a seed
- * @since 0.0.1 
- */
-export alias SeededTuple a = #[Seed, a]
 
 /**
  * Simple wrapper function to create a SeededTuple
@@ -81,7 +76,7 @@ export mapStep = (fn, seed) => #[LCG.next(seed), fn(seed)]
  * @example
  * PRNG.mapSteps(10, PRNG.randomBool, PRNG.create(100))
  */
-mapSteps :: Integer -> (Seed -> a) -> Async Seed -> Async (List (SeededTuple a))
+mapSteps :: Integer -> (Seed -> a) -> Wish a Seed -> Wish a (List (SeededTuple a))
 export mapSteps = (steps, fn, mSeed) => map(
   (seed) => pipe(
     List.range(0),
@@ -111,7 +106,7 @@ export mapSteps = (steps, fn, mSeed) => map(
  * )(100)
  */
 dropSeeds :: List (SeededTuple a) -> List a
-export dropSeeds = map(Tuple.snd)
+export dropSeeds = (list) => map(Tuple.snd, list)
 
 /**
  * Get a floating value from a seed

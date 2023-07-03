@@ -21,3 +21,9 @@ instance Show Seed {
 }
 
 export alias Async a = Wish String a
+
+/**
+ * A SeededTuple is used to encapsulate a value relative to a seed
+ * @since 0.0.1 
+ */
+export alias SeededTuple a = #[Seed, a]
