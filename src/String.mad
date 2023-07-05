@@ -1,0 +1,30 @@
+import ByteArray from "ByteArray"
+import IO from "IO"
+import List from "List"
+import Number from "Number"
+import String from "String"
+
+
+
+charCodeAt :: String -> Integer -> Integer
+export charCodeAt = (s, i) => #- s.charCodeAt(i) -#
+
+fromCharCode :: List Integer -> String
+export fromCharCode = (codes) => #- String.fromCharCode(...__listToJSArray__(codes)) -#
+
+stringToIntJS :: String -> Integer
+export stringToIntJS = (s) => pipe(
+  String.length,
+  List.range(0),
+  map(charCodeAt(s)),
+  IO.trace("charky"),
+  List.reduce((hash, c) => c + (hash << 6) + (hash << 16) - hash, 0),
+)(s)
+
+stringToInt :: String -> Integer
+export stringToInt = pipe(
+  ByteArray.fromString,
+  IO.trace("char key"),
+  ByteArray.reduce((hash, byte) => hash + (byte << 6) + (byte << 16), 0),
+  Number.byteToInteger,
+)
