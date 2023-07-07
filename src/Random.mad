@@ -146,13 +146,27 @@ dropSeeds :: List (SeededTuple a) -> List a
 export dropSeeds = (list) => map(Tuple.snd, list)
 
 /**
+ * Apply a transformation function to a seed multiple times and return the result
+ * @since 0.0.1
+ * pipe(
+ *   Random.create,
+ *   iterate(10, Random.randomFloat)
+ * )(100
+ */
+iterate :: Integer -> (Seed -> a) -> Seed -> List a
+export iterate = (steps, fn, seed) => pipe(
+  mapSteps(steps, fn),
+  dropSeeds,
+)(seed)
+
+/**
  * Get a floating value from a seed
  * @since 0.0.1
  * @example
- * Random.floatFromSeed(Random.create(100))
+ * Random.randomFloat(Random.create(100))
  */
-floatFromSeed :: Seed -> Float
-export floatFromSeed = pipe(
+randomFloat :: Seed -> Float
+export randomFloat = pipe(
   step,
   unSeed,
   (x) => (x / LCG_M),
@@ -166,7 +180,7 @@ export floatFromSeed = pipe(
  */
 randomInt :: Integer -> Integer -> Seed -> Integer
 export randomInt = (low, high, seed) => pipe(
-  floatFromSeed,
+  randomFloat,
   intGradient(low, high),
 )(seed)
 
@@ -178,7 +192,7 @@ export randomInt = (low, high, seed) => pipe(
  */
 randomBool :: Seed -> Boolean
 export randomBool = pipe(
-  floatFromSeed,
+  randomFloat,
   (f) => f > 0.5,
 )
 
@@ -222,3 +236,23 @@ export randomShuffle = (list, seed) => pipe(
   ),
   .stack,
 )(list)
+
+export alias BoundSeed = {
+  bool :: {} -> Boolean,
+  float :: {} -> Float,
+  int :: Integer -> Integer -> Integer,
+  pick :: List a -> Maybe a,
+  shuffle :: List a -> List a,
+}
+
+generate :: Integer -> BoundSeed
+export generate = (int) => {
+  seed = create(int)
+  return {
+    int: randomInt($, $, seed),
+    bool: () => randomBool(seed),
+    shuffle: randomShuffle($, seed),
+    float: () => randomFloat(seed),
+    pick: randomPick($, seed),
+  }
+}

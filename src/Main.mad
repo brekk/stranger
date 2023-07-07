@@ -26,13 +26,13 @@ main = () => {
     "YO",
     100,
     pipe(
-      Random.mapSteps(10, Random.floatFromSeed),
+      Random.mapSteps(10, Random.randomFloat),
       Random.dropSeeds,
     ),
   )
   IO.trace("stringToIntJS", stringToIntJS("what a lazer beam is"))
   IO.trace("stringToInt", stringToInt("what a lazer beam is"))
-  run("A", 100, Random.floatFromSeed)
+  run("A", 100, Random.randomFloat)
   run(
     "B",
     100,
@@ -41,7 +41,7 @@ main = () => {
       Random.step,
       Random.step,
       Random.step,
-      Random.floatFromSeed,
+      Random.randomFloat,
     ),
   )
   run(
@@ -49,15 +49,15 @@ main = () => {
     100,
     pipe(
       Random.stepN(4),
-      Random.floatFromSeed,
+      Random.randomFloat,
     ),
   )
-  run("D", 100, Random.mapSteps(4, Random.floatFromSeed))
+  run("D", 100, Random.mapSteps(4, Random.randomFloat))
   run(
     "E",
     100,
     pipe(
-      Random.mapSteps(4, Random.floatFromSeed),
+      Random.mapSteps(4, Random.randomFloat),
       Random.dropSeeds,
     ),
   )
@@ -134,4 +134,16 @@ main = () => {
       Random.randomShuffle(words),
     ),
   )
+
+  r = Random.generate(100)
+  r.int(1, 10) |> IO.trace("int")
+  r.float() |> IO.trace("float")
+  r.bool() |> IO.trace("bool")
+  r.pick(["apple", "banana", "crayon"]) |> IO.trace("int")
+  r.shuffle(["hey", "hello", "yo", "sup", "hi", "greetings"]) |> IO.trace("shuffle")
+  pipe(
+    List.range(0),
+    map((_) => r.int(1, 10)),
+    IO.trace("10 ints"),
+  )(10)
 }
