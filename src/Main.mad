@@ -15,7 +15,7 @@ import { stringToInt, stringToIntJS } from "./String"
 
 // run :: Inspect Seed => String -> Integer -> (Wish a Seed -> Wish a {}) -> {}
 run = (key, seedNumber, fn) => pipe(
-  PRNG.create,
+  LCG.create,
   map(IO.trace(`${key} -->`)),
   fn,
   map(IO.trace(`${key} <--`)),
@@ -23,7 +23,7 @@ run = (key, seedNumber, fn) => pipe(
 )(seedNumber)
 
 main = () => {
-  IO.trace("yo", LCG.next(LCG.mkSeed(stringToInt("shit"))))
+  IO.trace("yo", LCG.next(LCG.create(stringToInt("shit"))))
   run(
     "YO",
     100,

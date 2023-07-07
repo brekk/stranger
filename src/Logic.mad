@@ -23,7 +23,7 @@ export perturbation = (n, b, a, d) => pipe(
 )([b, n, a])
 
 /**
- * Clamp a number between two boundaries
+ * Clamp a number between two boundaries, modularly
  * @since 0.0.1
  * @example
  * modClamp(5, 10, 100)

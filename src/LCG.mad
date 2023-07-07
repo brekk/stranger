@@ -13,10 +13,10 @@ import { Seed } from "./Types"
  * Make a Seed from an integer
  * @since 0.0.1
  * @example
- * LCG.mkSeed(100)
+ * LCG.create(100)
  */
-mkSeed :: Integer -> Seed
-export mkSeed = pipe(
+create :: Integer -> Seed
+export create = pipe(
   modClamp(SEED_MIN, SEED_MAX),
   Seed,
 )
@@ -25,7 +25,7 @@ export mkSeed = pipe(
  * Pull the internal value from a Seed
  * @since 0.0.1
  * @example
- * LCG.unSeed(LCG.mkSeed(100))
+ * LCG.unSeed(LCG.create(100))
  */
 unSeed :: Seed -> Integer
 export unSeed = where {
@@ -37,7 +37,7 @@ export unSeed = where {
  * Transform a seed
  * @since 0.0.1
  * @example
- * LCG.seedMap((x) => x * 2, LCG.mkSeed(100))
+ * LCG.seedMap((x) => x * 2, LCG.create(100))
  */
 seedMap :: (Integer -> Integer) -> Seed -> Seed
 export seedMap = (fn, seed) => pipe(
@@ -50,7 +50,7 @@ export seedMap = (fn, seed) => pipe(
  * Perturb a seed value to produce another internal generator value
  * @since 0.0.1
  * @example
- * LCG.perturb(LCG_C, LCG.mkSeed(100))
+ * LCG.perturb(LCG_C, LCG.create(100))
  */
 perturb :: Integer -> Seed -> Seed
 export perturb = (d, seed) => seedMap(perturbation($, LCG_A, d, LCG_M))(seed)
@@ -60,7 +60,169 @@ export perturb = (d, seed) => seedMap(perturbation($, LCG_A, d, LCG_M))(seed)
  * Move the internal seed value forward by one perturbation
  * @since 0.0.1
  * @example
- * LCG.next(LCG.mkSeed(100))
+ * LCG.step(LCG.create(100))
  */
-next :: Seed -> Seed
-export next = perturb(LCG_C)
+step :: Seed -> Seed
+export step = perturb(LCG_C)
+import type { Maybe } from "Maybe"
+
+import type { Seed, SeededTuple } from "./Types"
+
+import List from "List"
+import Tuple from "Tuple"
+
+import { LCG_M } from "./Constants"
+import LCG from "./LCG"
+import { maybeSetIndex } from "./List"
+import { intGradient } from "./Logic"
+
+
+
+/**
+ * Step a given PRNG multiple generations forward
+ * @since 0.0.1
+ * @example
+ * pipe(
+ *   PRNG.create,
+ *   PRNG.stepN(10)
+ * )(100)
+ */
+stepN :: Integer -> Seed -> Seed
+export stepN = (steps, mSeed) => pipe(
+  List.range(0),
+  List.reduce((prev, _) => LCG.step(prev), mSeed),
+)(steps)
+
+/**
+ * Simple wrapper function to create a SeededTuple
+ * @since 0.0.1
+ * @example
+ * PRNG.seedTuple(LCG.create(100), "hey there")
+ */
+seedTuple :: Seed -> a -> SeededTuple a
+export seedTuple = (seed, a) => #[seed, a]
+
+/**
+ * Apply a transformation function to a given seed and set the step seed in a step
+ * @since 0.0.1
+ * @example
+ * PRNG.mapStep(PRNG.randomBool, LCG.create(100))
+ */
+mapStep :: (Seed -> a) -> Seed -> SeededTuple a
+export mapStep = (fn, seed) => pipe(
+  fn,
+  seedTuple(LCG.step(seed)),
+)(seed)
+
+/**
+ * Apply mapStep multiple times in a row
+ * @since 0.0.1
+ * @example
+ * PRNG.mapSteps(10, PRNG.randomBool, PRNG.create(100))
+ */
+mapSteps :: Integer -> (Seed -> a) -> Seed -> List (SeededTuple a)
+export mapSteps = (steps, fn, seed) => pipe(
+  List.range(0),
+  List.reduce(
+    (agg, _) => pipe(
+      mapStep(fn),
+      where {
+        #[newSeed, x] =>
+          ({ prev: newSeed, stack: [...agg.stack, #[newSeed, x]] })
+      },
+    )(agg.prev),
+    { stack: [], prev: seed },
+  ),
+  .stack,
+)(steps + 1)
+
+/**
+ * Convert a list of SeededTuples into just a list
+ * @since 0.0.1
+ * @example
+ * pipe(
+ *   PRNG.create,
+ *   PRNG.mapSteps(10, PRNG.randomBool),
+ *   PRNG.dropSeeds
+ * )(100)
+ */
+dropSeeds :: List (SeededTuple a) -> List a
+export dropSeeds = (list) => map(Tuple.snd, list)
+
+/**
+ * Get a floating value from a seed
+ * @since 0.0.1
+ * @example
+ * PRNG.floatFromSeed(PRNG.create(100))
+ */
+floatFromSeed :: Seed -> Float
+export floatFromSeed = pipe(
+  LCG.step,
+  LCG.unSeed,
+  (x) => (x / LCG_M),
+)
+
+/**
+ * Generate a random integer between two integer bounds
+ * @since 0.0.1
+ * @example
+ * PRNG.randomInt(0, 100, PRNG.create(10))
+ */
+randomInt :: Integer -> Integer -> Seed -> Integer
+export randomInt = (low, high, seed) => pipe(
+  floatFromSeed,
+  intGradient(low, high),
+)(seed)
+
+/**
+ * Generate a random boolean
+ * @since 0.0.1
+ * @example
+ * PRNG.randomBool(PRNG.create(10))
+ */
+randomBool :: Seed -> Boolean
+export randomBool = pipe(
+  floatFromSeed,
+  (f) => f > 0.5,
+)
+
+/**
+ * Pick a value from a list
+ * @since 0.0.1
+ * @example
+ * PRNG.randomPick([0,1,2,3,4,5], PRNG.create(10))
+ */
+randomPick :: List a -> Seed -> Maybe a
+export randomPick = (list, seed) => pipe(
+  List.nth(randomInt(0, List.length(list) - 1, seed)),
+)(list)
+
+/**
+ * Shuffle a given array
+ * @since 0.0.1
+ * @example
+ * PRNG.randomShuffle(["ka", "dabra", "abra"], PRNG.create(10))
+ */
+randomShuffle :: List a -> Seed -> List a
+export randomShuffle = (list, seed) => pipe(
+  List.reduce(
+    (agg, _) => {
+      max = List.length(list) - 1
+      x = randomInt(1, max, agg.current)
+      step = LCG.step(agg.current)
+      y = randomInt(1, max, step)
+      fromStack = List.nth($, agg.stack)
+      nthX = fromStack(x)
+      nthY = fromStack(y)
+      return {
+        stack: pipe(
+          maybeSetIndex(y, nthX),
+          maybeSetIndex(x, nthY),
+        )(agg.stack),
+        current: step,
+      }
+    },
+    { stack: list, current: seed },
+  ),
+  .stack,
+)(list)

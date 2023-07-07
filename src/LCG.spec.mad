@@ -2,15 +2,15 @@ import Number from "Number"
 import { assertEquals, test } from "Test"
 
 import { LCG_C, SEED_MAX, SEED_MIN } from "./Constants"
-import { mkSeed, next, seedMap, unSeed } from "./LCG"
+import { create, seedMap, step, unSeed } from "./LCG"
 import { Seed } from "./Types"
 
 
 
-test("mkSeed will clamp values over the max", () => assertEquals(Seed(2), mkSeed(SEED_MAX + 1)))
+test("create will clamp values over the max", () => assertEquals(Seed(2), create(SEED_MAX + 1)))
 test(
-  "mkSeed will clamp values under the min",
-  () => assertEquals(Seed(SEED_MAX), mkSeed(SEED_MIN - 1)),
+  "create will clamp values under the min",
+  () => assertEquals(Seed(SEED_MAX), create(SEED_MIN - 1)),
 )
 test(
   "unSeed",
@@ -21,10 +21,52 @@ test(
 )
 test("seedMap", () => assertEquals(Seed(100), seedMap((x) => x * 2, Seed(50))))
 test(
-  "next",
+  "step",
   () => {
-    a = mkSeed(100)
-    b = next(a)
+    a = create(100)
+    b = step(a)
     return assertEquals(unSeed(b), 4827100)
   },
 )
+import { assertEquals, test } from "Test"
+import Wish from "Wish"
+
+import LCG from "./LCG"
+import { mapStep, mapSteps, seedTuple, stepN } from "./PRNG"
+import { Seed } from "./Types"
+
+
+
+test(
+  "stepN",
+  () => pipe(
+    stepN(5),
+    assertEquals($, Seed(1708473988)),
+  )(LCG.create(100)),
+)
+
+test(
+  "seedTuple",
+  () => pipe(
+    seedTuple($, "cool"),
+    assertEquals($, #[Seed(100), "cool"]),
+  )(LCG.create(100)),
+)
+
+test(
+  "mapStep",
+  () => pipe(
+    mapStep((x) => LCG.unSeed(x) * 2),
+    assertEquals($, #[Seed(4827100), 200]),
+  )(LCG.create(100)),
+)
+
+/*
+test(
+  "mapSteps",
+  () => pipe(
+    map(mapSteps(3, (x) => LCG.unSeed(x) * 2)),
+    chain(assertEquals($, [])),
+  )(create(100)),
+)
+*/
