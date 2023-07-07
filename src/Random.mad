@@ -1,7 +1,13 @@
-import type { Seed } from "./Types"
+import type { Maybe } from "Maybe"
+
+import type { Seed, SeededTuple } from "./Types"
+
+import List from "List"
+import Tuple from "Tuple"
 
 import { LCG_A, LCG_C, LCG_M, SEED_MAX, SEED_MIN } from "./Constants"
-import { modClamp, perturbation } from "./Logic"
+import { maybeSetIndex } from "./List"
+import { intGradient, modClamp, perturbation } from "./Logic"
 import { Seed } from "./Types"
 
 
@@ -13,7 +19,7 @@ import { Seed } from "./Types"
  * Make a Seed from an integer
  * @since 0.0.1
  * @example
- * LCG.create(100)
+ * Random.create(100)
  */
 create :: Integer -> Seed
 export create = pipe(
@@ -25,7 +31,7 @@ export create = pipe(
  * Pull the internal value from a Seed
  * @since 0.0.1
  * @example
- * LCG.unSeed(LCG.create(100))
+ * Random.unSeed(Random.create(100))
  */
 unSeed :: Seed -> Integer
 export unSeed = where {
@@ -37,7 +43,7 @@ export unSeed = where {
  * Transform a seed
  * @since 0.0.1
  * @example
- * LCG.seedMap((x) => x * 2, LCG.create(100))
+ * Random.seedMap((x) => x * 2, Random.create(100))
  */
 seedMap :: (Integer -> Integer) -> Seed -> Seed
 export seedMap = (fn, seed) => pipe(
@@ -50,7 +56,7 @@ export seedMap = (fn, seed) => pipe(
  * Perturb a seed value to produce another internal generator value
  * @since 0.0.1
  * @example
- * LCG.perturb(LCG_C, LCG.create(100))
+ * Random.perturb(LCG_C, Random.create(100))
  */
 perturb :: Integer -> Seed -> Seed
 export perturb = (d, seed) => seedMap(perturbation($, LCG_A, d, LCG_M))(seed)
@@ -60,21 +66,11 @@ export perturb = (d, seed) => seedMap(perturbation($, LCG_A, d, LCG_M))(seed)
  * Move the internal seed value forward by one perturbation
  * @since 0.0.1
  * @example
- * LCG.step(LCG.create(100))
+ * Random.step(Random.create(100))
  */
 step :: Seed -> Seed
 export step = perturb(LCG_C)
-import type { Maybe } from "Maybe"
 
-import type { Seed, SeededTuple } from "./Types"
-
-import List from "List"
-import Tuple from "Tuple"
-
-import { LCG_M } from "./Constants"
-import LCG from "./LCG"
-import { maybeSetIndex } from "./List"
-import { intGradient } from "./Logic"
 
 
 
@@ -90,14 +86,14 @@ import { intGradient } from "./Logic"
 stepN :: Integer -> Seed -> Seed
 export stepN = (steps, mSeed) => pipe(
   List.range(0),
-  List.reduce((prev, _) => LCG.step(prev), mSeed),
+  List.reduce((prev, _) => step(prev), mSeed),
 )(steps)
 
 /**
  * Simple wrapper function to create a SeededTuple
  * @since 0.0.1
  * @example
- * PRNG.seedTuple(LCG.create(100), "hey there")
+ * PRNG.seedTuple(Random.create(100), "hey there")
  */
 seedTuple :: Seed -> a -> SeededTuple a
 export seedTuple = (seed, a) => #[seed, a]
@@ -106,19 +102,19 @@ export seedTuple = (seed, a) => #[seed, a]
  * Apply a transformation function to a given seed and set the step seed in a step
  * @since 0.0.1
  * @example
- * PRNG.mapStep(PRNG.randomBool, LCG.create(100))
+ * Random.mapStep(Random.randomBool, Random.create(100))
  */
 mapStep :: (Seed -> a) -> Seed -> SeededTuple a
 export mapStep = (fn, seed) => pipe(
   fn,
-  seedTuple(LCG.step(seed)),
+  seedTuple(step(seed)),
 )(seed)
 
 /**
  * Apply mapStep multiple times in a row
  * @since 0.0.1
  * @example
- * PRNG.mapSteps(10, PRNG.randomBool, PRNG.create(100))
+ * Random.mapSteps(10, Random.randomBool, Random.create(100))
  */
 mapSteps :: Integer -> (Seed -> a) -> Seed -> List (SeededTuple a)
 export mapSteps = (steps, fn, seed) => pipe(
@@ -141,9 +137,9 @@ export mapSteps = (steps, fn, seed) => pipe(
  * @since 0.0.1
  * @example
  * pipe(
- *   PRNG.create,
- *   PRNG.mapSteps(10, PRNG.randomBool),
- *   PRNG.dropSeeds
+ *   Random.create,
+ *   Random.mapSteps(10, Random.randomBool),
+ *   Random.dropSeeds
  * )(100)
  */
 dropSeeds :: List (SeededTuple a) -> List a
@@ -153,12 +149,12 @@ export dropSeeds = (list) => map(Tuple.snd, list)
  * Get a floating value from a seed
  * @since 0.0.1
  * @example
- * PRNG.floatFromSeed(PRNG.create(100))
+ * Random.floatFromSeed(Random.create(100))
  */
 floatFromSeed :: Seed -> Float
 export floatFromSeed = pipe(
-  LCG.step,
-  LCG.unSeed,
+  step,
+  unSeed,
   (x) => (x / LCG_M),
 )
 
@@ -166,7 +162,7 @@ export floatFromSeed = pipe(
  * Generate a random integer between two integer bounds
  * @since 0.0.1
  * @example
- * PRNG.randomInt(0, 100, PRNG.create(10))
+ * Random.randomInt(0, 100, Random.create(10))
  */
 randomInt :: Integer -> Integer -> Seed -> Integer
 export randomInt = (low, high, seed) => pipe(
@@ -178,7 +174,7 @@ export randomInt = (low, high, seed) => pipe(
  * Generate a random boolean
  * @since 0.0.1
  * @example
- * PRNG.randomBool(PRNG.create(10))
+ * Random.randomBool(Random.create(10))
  */
 randomBool :: Seed -> Boolean
 export randomBool = pipe(
@@ -190,7 +186,7 @@ export randomBool = pipe(
  * Pick a value from a list
  * @since 0.0.1
  * @example
- * PRNG.randomPick([0,1,2,3,4,5], PRNG.create(10))
+ * Random.randomPick([0,1,2,3,4,5], Random.create(10))
  */
 randomPick :: List a -> Seed -> Maybe a
 export randomPick = (list, seed) => pipe(
@@ -201,7 +197,7 @@ export randomPick = (list, seed) => pipe(
  * Shuffle a given array
  * @since 0.0.1
  * @example
- * PRNG.randomShuffle(["ka", "dabra", "abra"], PRNG.create(10))
+ * Random.randomShuffle(["ka", "dabra", "abra"], Random.create(10))
  */
 randomShuffle :: List a -> Seed -> List a
 export randomShuffle = (list, seed) => pipe(
@@ -209,8 +205,8 @@ export randomShuffle = (list, seed) => pipe(
     (agg, _) => {
       max = List.length(list) - 1
       x = randomInt(1, max, agg.current)
-      step = LCG.step(agg.current)
-      y = randomInt(1, max, step)
+      current = step(agg.current)
+      y = randomInt(1, max, current)
       fromStack = List.nth($, agg.stack)
       nthX = fromStack(x)
       nthY = fromStack(y)
@@ -219,7 +215,7 @@ export randomShuffle = (list, seed) => pipe(
           maybeSetIndex(y, nthX),
           maybeSetIndex(x, nthY),
         )(agg.stack),
-        current: step,
+        current,
       }
     },
     { stack: list, current: seed },
