@@ -5,9 +5,11 @@ import IO from "IO"
 import List from "List"
 import { Just, Nothing } from "Maybe"
 import Number from "Number"
+import String from "String"
 import Wish from "Wish"
 
-import Random from "./Random"
+import PRNG from "./GenRandom"
+import LCG from "./LCG"
 import { stringToInt, stringToIntJS } from "./String"
 
 
@@ -103,6 +105,27 @@ main = () => {
         ),
       ),
       Random.dropSeeds,
+    ),
+  )
+  run(
+    "iterate!",
+    100,
+    pipe(
+      Random.iterate(10, Random.randomPick(['x', 'y', 'z'])),
+    ),
+  )
+  run(
+    "iterate shuffle!",
+    100,
+    pipe(
+      Random.iterate(10, Random.randomShuffle(String.split("", "abcdefghijklmnopqrstuvwxyz"))),
+    ),
+  )
+  run(
+    "multi   shuffle!",
+    101,
+    pipe(
+      Random.iterate(10, Random.randomShuffle(String.split("", "abcdefghijklmnopqrstuvwxyz"))),
     ),
   )
   run(
