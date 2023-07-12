@@ -1,10 +1,36 @@
-import type { Seed } from "./Types"
+import type { ComparisonResult } from "Compare"
+import type { Maybe } from "Maybe"
+
+import List from "List"
+import Tuple from "Tuple"
 
 import { LCG_A, LCG_C, LCG_M, SEED_MAX, SEED_MIN } from "./Constants"
-import { modClamp, perturbation } from "./Logic"
-import { Seed } from "./Types"
+import { maybeSetIndex } from "./List"
+import { intGradient, modClamp, perturbation } from "./Logic"
 
 
+
+// A seed for the linear congruential generator. We omit a `Semiring`
+// instance because there is no `zero` value, as 0 is not an acceptable
+// seed for the generator.
+export type Seed = Seed(Integer)
+
+interface Eq a => Seed a {
+  compare :: a -> a -> ComparisonResult
+}
+
+instance Show Seed {
+  show = (seed) => where(seed) {
+    Seed(i) =>
+      show(i)
+  }
+}
+
+/**
+ * A SeededTuple is used to encapsulate a value relative to a seed
+ * @since 0.0.1 
+ */
+export alias SeededTuple a = #[Seed, a]
 
 // This code partially based upon: https://github.com/purescript/purescript-lcg/blob/master/src/LCG/LCG.purs
 // which has a BSD-3 License - https://github.com/purescript/purescript-lcg/blob/master/LICENSE
@@ -64,3 +90,171 @@ export perturb = (d, seed) => seedMap(perturbation($, LCG_A, d, LCG_M))(seed)
  */
 next :: Seed -> Seed
 export next = perturb(LCG_C)
+
+/**
+ * Accumulate a value over several iterations of a function
+ * @since 0.0.1
+ * @example
+ * pipe(
+ *   LCG.mkSeed,
+ *   LCG.accumulate(10, LCG.deriveBoolean)
+ * )(100)
+ */
+accumulate :: (a -> a) -> Integer -> a -> a
+export accumulate = (fn, steps, initial) => pipe(
+  List.range(0),
+  List.reduce((agg, _) => fn(agg), initial),
+)(steps)
+
+
+/**
+ * Simple wrapper function to create a SeededTuple
+ * @since 0.0.1
+ * @example
+ * LCG.seedPair(LCG.mkSeed(100), "hey there")
+ */
+seedPair :: Seed -> a -> SeededTuple a
+export seedPair = (seed, a) => #[seed, a]
+
+/**
+ * Apply a transformation function to a given seed and capture it in a pair
+ * @since 0.0.1
+ * @example
+ * LCG.mapWithProof(LCG.deriveBool, LCG.mkSeed(100))
+ */
+mapWithProof :: (Seed -> a) -> Seed -> SeededTuple a
+export mapWithProof = (fn, seed) => pipe(
+  fn,
+  seedPair(next(seed)),
+)(seed)
+
+/**
+ * Convert a list of SeededTuples into just a list
+ * @since 0.0.1
+ * @example
+ * pipe(
+ *   LCG.mkSeed,
+ *   LCG.mapWithProof(10, LCG.randomBool),
+ *   LCG.dropProof
+ * )(100)
+ */
+dropProof :: List (SeededTuple a) -> List a
+export dropProof = (list) => map(Tuple.snd, list)
+
+/**
+ * Apply mapSeededStep multiple times in a row
+ * @since 0.0.1
+ * @example
+ * PRNG.iterateWithProof(10, PRNG.randomBool, PRNG.create(100))
+ */
+iterateWithProof :: Integer -> (Seed -> a) -> Seed -> List (SeededTuple a)
+export iterateWithProof = (steps, fn, seed) => pipe(
+  List.range(0),
+  List.reduce(
+    (agg, _) => pipe(
+      mapWithProof(fn),
+      where {
+        #[newSeed, x] =>
+          ({ prev: newSeed, stack: [...agg.stack, #[newSeed, x]] })
+      },
+    )(agg.prev),
+    { stack: [], prev: seed },
+  ),
+  .stack,
+)(steps + 1)
+
+/**
+ * Apply a transformation function to a seed multiple times and return the result
+ * @since 0.0.1
+ * pipe(
+ *   PRNG.create,
+ *   iterate(10, PRNG.randomFloat)
+ * )(100
+ */
+iterate :: Integer -> (Seed -> b) -> Seed -> List b
+export iterate = (steps, fn, seed) => pipe(
+  pipe(
+    iterateWithProof(steps, fn),
+    dropProof,
+  ),
+)(seed)
+
+// CONVERTERS
+
+/**
+ * Generate a floating value from a seed
+ * @since 0.0.1
+ * @example
+ * LCG.deriveFloat(LCG.mkSeed(100))
+ */
+deriveFloat :: Seed -> Float
+export deriveFloat = pipe(
+  next,
+  unSeed,
+  (x) => (x / LCG_M),
+)
+
+/**
+ * Generate a random integer between two integer bounds, relative to a seed
+ * @since 0.0.1
+ * @example
+ * LCG.deriveInt(0, 100, LCG.mkSeed(10))
+ */
+deriveInt :: Integer -> Integer -> Seed -> Integer
+export deriveInt = (low, high, seed) => pipe(
+  deriveFloat,
+  intGradient(low, high),
+)(seed)
+
+/**
+ * Generate a random boolean relative to a seed
+ * @since 0.0.1
+ * @example
+ * LCG.deriveBool(LCG.mkSeed(10))
+ */
+deriveBool :: Seed -> Boolean
+export deriveBool = pipe(
+  deriveFloat,
+  (f) => f > 0.5,
+)
+
+/**
+ * Pick a value from a list relative to a seed
+ * @since 0.0.1
+ * @example
+ * LCG.deriveChoice([0,1,2,3,4,5], LCG.mkSeed(10))
+ */
+deriveChoice :: List a -> Seed -> Maybe a
+export deriveChoice = (list, seed) => pipe(
+  List.nth(deriveInt(0, List.length(list) - 1, seed)),
+)(list)
+
+/**
+ * shuffle a given array relative to a seed
+ * @since 0.0.1
+ * @example
+ * LCG.deriveShuffle(["ka", "dabra", "abra"], LCG.mkSeed(10))
+ */
+deriveShuffle :: List a -> Seed -> List a
+export deriveShuffle = (list, seed) => pipe(
+  List.reduce(
+    (agg, _) => {
+      max = List.length(list) - 1
+      x = deriveInt(1, max, agg.current)
+      current = next(agg.current)
+      y = deriveInt(1, max, current)
+      fromStack = List.nth($, agg.stack)
+      nthX = fromStack(x)
+      nthY = fromStack(y)
+      return {
+        stack: pipe(
+          maybeSetIndex(y, nthX),
+          maybeSetIndex(x, nthY),
+        )(agg.stack),
+        current,
+      }
+    },
+    { stack: list, current: seed },
+  ),
+  .stack,
+)(list)

@@ -1,172 +1,223 @@
-// import Wish from "Wish"
-import type { Seed } from "./Types"
-
-import IO from "IO"
-import List from "List"
-import { Just, Nothing } from "Maybe"
-import Number from "Number"
-import String from "String"
-import Wish from "Wish"
-
-import PRNG from "./GenRandom"
-import LCG from "./LCG"
-import { stringToInt, stringToIntJS } from "./String"
-
-
-
-// run :: Inspect Seed => String -> Integer -> (Wish a Seed -> Wish a {}) -> {}
-run = (key, seedNumber, fn) => pipe(
-  Random.create,
-  IO.trace(`${key} -->`),
-  fn,
-  IO.trace(`${key} <--`),
-)(seedNumber)
-
-main = () => {
-  IO.trace("yo", Random.step(Random.create(stringToInt("shit"))))
-  run(
-    "YO",
-    100,
-    pipe(
-      Random.mapSteps(10, Random.randomFloat),
-      Random.dropSeeds,
-    ),
-  )
-  IO.trace("stringToIntJS", stringToIntJS("what a lazer beam is"))
-  IO.trace("stringToInt", stringToInt("what a lazer beam is"))
-  run("A", 100, Random.randomFloat)
-  run(
-    "B",
-    100,
-    pipe(
-      Random.step,
-      Random.step,
-      Random.step,
-      Random.step,
-      Random.randomFloat,
-    ),
-  )
-  run(
-    "C",
-    100,
-    pipe(
-      Random.stepN(4),
-      Random.randomFloat,
-    ),
-  )
-  run("D", 100, Random.mapSteps(4, Random.randomFloat))
-  run(
-    "E",
-    100,
-    pipe(
-      Random.mapSteps(4, Random.randomFloat),
-      Random.dropSeeds,
-    ),
-  )
-  run(
-    "INTEGER (step 4)",
-    100,
-    pipe(
-      Random.stepN(4),
-      Random.randomInt(0, 100),
-    ),
-  )
-  run(
-    "INTEGERS",
-    100,
-    pipe(
-      Random.mapSteps(10, Random.randomInt(0, 100)),
-      Random.dropSeeds,
-    ),
-  )
-  run(
-    "booleans",
-    100,
-    pipe(
-      Random.mapSteps(10, Random.randomBool),
-      Random.dropSeeds,
-    ),
-  )
-  run(
-    "pick!",
-    100,
-    pipe(
-      Random.mapSteps(
-        100,
-        pipe(
-          Random.randomPick(['a', 'b', 'c', 'd', 'e', 'f']),
-          where {
-            Just(x) =>
-              x
-
-            Nothing =>
-              'x'
-          },
-        ),
-      ),
-      Random.dropSeeds,
-    ),
-  )
-  run(
-    "iterate!",
-    100,
-    pipe(
-      Random.iterate(10, Random.randomPick(['x', 'y', 'z'])),
-    ),
-  )
-  run(
-    "iterate shuffle!",
-    100,
-    pipe(
-      Random.iterate(10, Random.randomShuffle(String.split("", "abcdefghijklmnopqrstuvwxyz"))),
-    ),
-  )
-  run(
-    "multi   shuffle!",
-    101,
-    pipe(
-      Random.iterate(10, Random.randomShuffle(String.split("", "abcdefghijklmnopqrstuvwxyz"))),
-    ),
-  )
-  run(
-    "SHUFFLE",
-    100,
-    pipe(
-      Random.randomShuffle([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]),
-    ),
-  )
-  run(
-    "SHUFFLE CHARS",
-    100,
-    pipe(
-      Random.randomShuffle(['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']),
-    ),
-  )
-  words = ["cool", "nice", "awesome", "great", "fantastic"]
-  run(
-    "SHUFFLE WORDS",
-    100,
-    pipe(
-      Random.randomShuffle(words),
-    ),
-  )
-  run(
-    "SHUFFLE WORDS different seed",
-    101,
-    pipe(
-      Random.randomShuffle(words),
-    ),
-  )
-
-  r = Random.generate(100)
-  r.int(1, 10) |> IO.trace("int")
-  r.float() |> IO.trace("float")
-  r.bool() |> IO.trace("bool")
-  r.pick(["apple", "banana", "crayon"]) |> IO.trace("int")
-  r.shuffle(["hey", "hello", "yo", "sup", "hi", "greetings"]) |> IO.trace("shuffle")
-  pipe(
-    List.range(0),
-    map((_) => r.int(1, 10)),
-    IO.trace("10 ints"),
-  )(10)
+Downloading release from https://github.com/madlib-lang/madlib/releases/download/v0.20.0/madlib-arm64-apple-darwin.tar.gz
+Error: spawnSync /Users/brekk.bockrath/.config/yarn/global/node_modules/binary-install/node_modules/.bin/madlib ENOENT
+    at Object.spawnSync (node:internal/child_process:1117:20)
+    at spawnSync (node:child_process:871:24)
+    at Binary.run (/Users/brekk.bockrath/.config/yarn/global/node_modules/binary-install/index.js:107:20)
+    at Object.<anonymous> (/Users/brekk.bockrath/.config/yarn/global/node_modules/@madlib-lang/madlib/src/run.js:5:13)
+    at Module._compile (node:internal/modules/cjs/loader:1267:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1321:10)
+    at Module.load (node:internal/modules/cjs/loader:1125:32)
+    at Module._load (node:internal/modules/cjs/loader:965:12)
+    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:83:12)
+    at node:internal/main/run_main_module:23:47 {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'spawnSync /Users/brekk.bockrath/.config/yarn/global/node_modules/binary-install/node_modules/.bin/madlib',
+  path: '/Users/brekk.bockrath/.config/yarn/global/node_modules/binary-install/node_modules/.bin/madlib',
+  spawnargs: [
+    'format',
+    '--text',
+    '// import Wish from "Wish"\n' +
+      'import type { Seed } from "./Types"\n' +
+      '\n' +
+      'import IO from "IO"\n' +
+      'import List from "List"\n' +
+      'import { Just, Nothing } from "Maybe"\n' +
+      'import Number from "Number"\n' +
+      'import String from "String"\n' +
+      'import Wish from "Wish"\n' +
+      '\n' +
+      'import LCG from "./LCG"\n' +
+      'import PRNG from "./PRNG"\n' +
+      'import { stringToInt, stringToIntJS } from "./String"\n' +
+      '\n' +
+      '\n' +
+      '\n' +
+      'runLCG = (key, seedNumber, fn) => pipe(\n' +
+      '  LCG.mkSeed,\n' +
+      '  fn,\n' +
+      '  IO.trace(`LCG ${key}`),\n' +
+      ')(seedNumber)\n' +
+      '\n' +
+      '// run :: Inspect Seed => String -> Integer -> (Wish a Seed -> Wish a {}) -> {}\n' +
+      'run = (key, seedNumber, fn) => pipe(\n' +
+      '  PRNG.create,\n' +
+      '  map(IO.trace(`run ${key} -->`)),\n' +
+      '  fn,\n' +
+      '  Wish.fulfill((a) => { IO.trace("bad " ++ key, a) }, (b) => { IO.trace("good " ++ key, b) }),\n' +
+      ')(seedNumber)\n' +
+      '\n' +
+      'main = () => {\n' +
+      '  runLCG(\n' +
+      '    "START",\n' +
+      '    100,\n' +
+      '    pipe(\n' +
+      '      LCG.iterateWithProof(10, LCG.deriveInt(1, 10)),\n' +
+      '    ),\n' +
+      '  )\n' +
+      '  IO.trace("yo", PRNG.create(stringToInt("shit")))\n' +
+      '  IO.trace(\n' +
+      '    "YO",\n' +
+      '    pipe(\n' +
+      '      LCG.mkSeed,\n' +
+      '      LCG.iterateWithProof(10, LCG.deriveFloat),\n' +
+      '      LCG.dropProof,\n' +
+      '    )(100),\n' +
+      '  )\n' +
+      '  run("A", 100, map(LCG.deriveFloat))\n' +
+      '  run(\n' +
+      '    "B",\n' +
+      '    100,\n' +
+      '    pipe(\n' +
+      '      PRNG.step,\n' +
+      '      PRNG.step,\n' +
+      '      PRNG.step,\n' +
+      '      PRNG.step,\n' +
+      '      map(LCG.deriveFloat),\n' +
+      '    ),\n' +
+      '  )\n' +
+      '  runLCG(\n' +
+      '    "LCG :: B",\n' +
+      '    100,\n' +
+      '    pipe(\n' +
+      '      LCG.next,\n' +
+      '      LCG.next,\n' +
+      '      LCG.next,\n' +
+      '      LCG.next,\n' +
+      '      LCG.deriveFloat,\n' +
+      '    ),\n' +
+      '  )\n' +
+      '  run(\n' +
+      '    "C",\n' +
+      '    100,\n' +
+      '    pipe(\n' +
+      '      PRNG.stepN(4),\n' +
+      '      map(LCG.deriveFloat),\n' +
+      '    ),\n' +
+      '  )\n' +
+      '  run("D", 100, PRNG.stepN(4))\n' +
+      '  run(\n' +
+      '    "E",\n' +
+      '    100,\n' +
+      '    map(\n' +
+      '      pipe(\n' +
+      '        LCG.iterateWithProof(4, LCG.deriveFloat),\n' +
+      '        LCG.dropProof,\n' +
+      '      ),\n' +
+      '    ),\n' +
+      '  )\n' +
+      '  run(\n' +
+      '    "INTEGER (step 4)",\n' +
+      '    100,\n' +
+      '    pipe(\n' +
+      '      PRNG.stepN(4),\n' +
+      '      map(LCG.deriveInt(0, 100)),\n' +
+      '    ),\n' +
+      '  )\n' +
+      '  run(\n' +
+      '    "INTEGERS",\n' +
+      '    100,\n' +
+      '    map(\n' +
+      '      pipe(\n' +
+      '        LCG.iterateWithProof(10, LCG.deriveInt(0, 100)),\n' +
+      '        LCG.dropProof,\n' +
+      '      ),\n' +
+      '    ),\n' +
+      '  )\n' +
+      '\n' +
+      '  run(\n' +
+      '    "booleans",\n' +
+      '    100,\n' +
+      '    pipe(\n' +
+      '      map(LCG.iterate(10, LCG.deriveBool)),\n' +
+      '    ),\n' +
+      '  )\n' +
+      '  runLCG(\n' +
+      '    "pick!",\n' +
+      '    100,\n' +
+      '    pipe(\n' +
+      '      LCG.iterateWithProof(\n' +
+      '        100,\n' +
+      '        pipe(\n' +
+      "          LCG.deriveChoice(['a', 'b', 'c', 'd', 'e', 'f']),\n" +
+      '          where {\n' +
+      '            Just(x) =>\n' +
+      '              x\n' +
+      '\n' +
+      '            Nothing =>\n' +
+      "              'x'\n" +
+      '          },\n' +
+      '        ),\n' +
+      '      ),\n' +
+      '      LCG.dropProof,\n' +
+      '    ),\n' +
+      '  )\n' +
+      '  runLCG(\n' +
+      '    "iterate!",\n' +
+      '    100,\n' +
+      '    pipe(\n' +
+      "      LCG.iterate(10, LCG.deriveChoice(['x', 'y', 'z'])),\n" +
+      '    ),\n' +
+      '  )\n' +
+      '  // shuffle sucks in LCG\n' +
+      '  runLCG(\n' +
+      '    "iterate shuffle!",\n' +
+      '    100,\n' +
+      '    pipe(\n' +
+      '      LCG.iterate(10, LCG.deriveShuffle(String.split("", "abcdefghijklmnopqrstuvwxyz"))),\n' +
+      '    ),\n' +
+      '  )\n' +
+      '  run(\n' +
+      '    "iterate shuffle!",\n' +
+      '    100,\n' +
+      '    pipe(\n' +
+      '      PRNG.iterate(10, LCG.deriveShuffle(String.split("", "abcdefghijklmnopqrstuvwxyz"))),\n' +
+      '    ),\n' +
+      '  )\n' +
+      '}\n' +
+      '\n' +
+      '/*\n' +
+      '      run(\n' +
+      '        "SHUFFLE",\n' +
+      '        100,\n' +
+      '        pipe(\n' +
+      '          PRNG.randomShuffle([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]),\n' +
+      '        ),\n' +
+      '      )\n' +
+      '      run(\n' +
+      '        "SHUFFLE CHARS",\n' +
+      '        100,\n' +
+      '        pipe(\n' +
+      "          PRNG.randomShuffle(['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']),\n" +
+      '        ),\n' +
+      '      )\n' +
+      '      words = ["cool", "nice", "awesome", "great", "fantastic"]\n' +
+      '      run(\n' +
+      '        "SHUFFLE WORDS",\n' +
+      '        100,\n' +
+      '        pipe(\n' +
+      '          PRNG.randomShuffle(words),\n' +
+      '        ),\n' +
+      '      )\n' +
+      '      run(\n' +
+      '        "SHUFFLE WORDS different seed",\n' +
+      '        101,\n' +
+      '        pipe(\n' +
+      '          PRNG.randomShuffle(words),\n' +
+      '        ),\n' +
+      '      )\n' +
+      '\n' +
+      '      r = PRNG.generate(100)\n' +
+      '      r.int(1, 10) |> IO.trace("int")\n' +
+      '      r.float() |> IO.trace("float")\n' +
+      '      r.bool() |> IO.trace("bool")\n' +
+      '      r.pick(["apple", "banana", "crayon"]) |> IO.trace("int")\n' +
+      '      r.shuffle(["hey", "hello", "yo", "sup", "hi", "greetings"]) |> IO.trace("shuffle")\n' +
+      '      pipe(\n' +
+      '        List.range(0),\n' +
+      '        map((_) => r.int(1, 10)),\n' +
+      '        IO.trace("10 ints"),\n' +
+      '      )(10)\n' +
+      '      */\n'
+  ]
 }

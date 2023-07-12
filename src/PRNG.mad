@@ -1,0 +1,91 @@
+Downloading release from https://github.com/madlib-lang/madlib/releases/download/v0.20.0/madlib-arm64-apple-darwin.tar.gz
+Error: spawnSync /Users/brekk.bockrath/.config/yarn/global/node_modules/binary-install/node_modules/.bin/madlib ENOENT
+    at Object.spawnSync (node:internal/child_process:1117:20)
+    at spawnSync (node:child_process:871:24)
+    at Binary.run (/Users/brekk.bockrath/.config/yarn/global/node_modules/binary-install/index.js:107:20)
+    at Object.<anonymous> (/Users/brekk.bockrath/.config/yarn/global/node_modules/@madlib-lang/madlib/src/run.js:5:13)
+    at Module._compile (node:internal/modules/cjs/loader:1267:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1321:10)
+    at Module.load (node:internal/modules/cjs/loader:1125:32)
+    at Module._load (node:internal/modules/cjs/loader:965:12)
+    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:83:12)
+    at node:internal/main/run_main_module:23:47 {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'spawnSync /Users/brekk.bockrath/.config/yarn/global/node_modules/binary-install/node_modules/.bin/madlib',
+  path: '/Users/brekk.bockrath/.config/yarn/global/node_modules/binary-install/node_modules/.bin/madlib',
+  spawnargs: [
+    'format',
+    '--text',
+    'import type { Maybe } from "Maybe"\n' +
+      '\n' +
+      'import type { Seed } from "./LCG"\n' +
+      '\n' +
+      'import List from "List"\n' +
+      'import Wish from "Wish"\n' +
+      '\n' +
+      'import LCG from "./LCG"\n' +
+      '\n' +
+      '\n' +
+      '\n' +
+      '/**\n' +
+      ' * Create a new pseudo-random value, wrapped in a Wish\n' +
+      ' * @since 0.0.1\n' +
+      ' * @example\n' +
+      ' * pipe(\n' +
+      ' *   PRNG.create,\n' +
+      ' * )(100)\n' +
+      ' */\n' +
+      'create :: Integer -> Wish a Seed\n' +
+      'export create = pipe(\n' +
+      '  LCG.mkSeed,\n' +
+      '  of,\n' +
+      ')\n' +
+      '\n' +
+      '/**\n' +
+      ' * Step a given PRNG instance one generation forward\n' +
+      ' * @since 0.0.1\n' +
+      ' * @example\n' +
+      ' * pipe(\n' +
+      ' *   PRNG.create,\n' +
+      ' *   PRNG.step\n' +
+      ' * )(100)\n' +
+      ' */\n' +
+      'step :: Wish a Seed -> Wish a Seed\n' +
+      'export step = map(LCG.next)\n' +
+      '\n' +
+      'stepN :: Integer -> Wish a Seed -> Wish a Seed\n' +
+      'export stepN = (n, mSeed) => map(LCG.accumulate(LCG.next, n))(mSeed)\n' +
+      '\n' +
+      'toFloat :: Wish a Seed -> Wish a Float\n' +
+      'export toFloat = map(LCG.deriveFloat)\n' +
+      '\n' +
+      'toBool :: Wish a Seed -> Wish a Boolean\n' +
+      'export toBool = map(LCG.deriveBool)\n' +
+      '\n' +
+      'binaryOperation :: (a -> Seed -> b) -> a -> Wish c Seed -> Wish c b\n' +
+      'binaryOperation = (fn, a, mB) => map(fn(a), mB)\n' +
+      '\n' +
+      '// pickFrom :: List a -> Wish b Seed -> Wish b (Maybe a)\n' +
+      '// export pickFrom = (list, mSeed) => map(LCG.deriveChoice(list), mSeed)\n' +
+      'export pickFrom = binaryOperation(LCG.deriveChoice)\n' +
+      '\n' +
+      '// shuffle :: List a -> Wish b Seed -> Wish b (List a)\n' +
+      'export shuffle = binaryOperation(LCG.deriveShuffle)\n' +
+      '\n' +
+      'iterate :: Integer -> (Seed -> a) -> Wish b (List Seed) -> Wish b (List a)\n' +
+      'export iterate = (steps, fn, mSeed) => pipe(\n' +
+      '  List.range(0),\n' +
+      '  List.reduce(\n' +
+      '    (prev, _) => {\n' +
+      '      return map(\n' +
+      '        pipe(\n' +
+      '          chain(LCG.iterate(steps, fn)),\n' +
+      '        ),\n' +
+      '      )(prev)\n' +
+      '    },\n' +
+      '    mSeed,\n' +
+      '  ),\n' +
+      ')(steps)\n'
+  ]
+}
