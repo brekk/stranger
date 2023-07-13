@@ -24,14 +24,14 @@ main = () => {
     "START",
     100,
     pipe(
-      LCG.iterateWithProof(10, LCG.deriveInt(1, 10)),
+      LCG.iterateWithProof(10, LCG.toInt(1, 10)),
     ),
   )
   IO.trace(
     "YO",
     pipe(
       LCG.mkSeed,
-      LCG.iterateWithProof(10, LCG.deriveFloat),
+      LCG.iterateWithProof(10, LCG.toFloat),
       LCG.dropProof,
     )(100),
   )
@@ -43,14 +43,14 @@ main = () => {
       LCG.next,
       LCG.next,
       LCG.next,
-      LCG.deriveFloat,
+      LCG.toFloat,
     ),
   )
   runLCG(
     "INTEGERS",
     100,
     pipe(
-      LCG.iterateWithProof(10, LCG.deriveInt(0, 100)),
+      LCG.iterateWithProof(10, LCG.toInt(0, 100)),
       LCG.dropProof,
     ),
   )
@@ -59,7 +59,7 @@ main = () => {
     "booleans",
     100,
     pipe(
-      (LCG.iterate(10, LCG.deriveBool)),
+      (LCG.iterate(10, LCG.toBool)),
     ),
   )
   runLCG(
@@ -69,7 +69,7 @@ main = () => {
       LCG.iterateWithProof(
         100,
         pipe(
-          LCG.deriveChoice(['a', 'b', 'c', 'd', 'e', 'f']),
+          LCG.pick(['a', 'b', 'c', 'd', 'e', 'f']),
           where {
             Just(x) =>
               x
@@ -86,7 +86,7 @@ main = () => {
     "iterate!",
     100,
     pipe(
-      LCG.iterate(10, LCG.deriveChoice(['x', 'y', 'z'])),
+      LCG.iterate(10, LCG.pick(['x', 'y', 'z'])),
     ),
   )
   ALPHABET = String.split("", "abcdefghijklmnopqrstuvwxyz")
@@ -98,7 +98,7 @@ main = () => {
       LCG.iterate(
         10,
         pipe(
-          LCG.deriveSingleShuffle(ALPHABET),
+          LCG.swapWalk(ALPHABET),
           .stack,
         ),
       ),
@@ -111,7 +111,7 @@ main = () => {
       LCG.iterateBinary(
         10,
         (a, b) => pipe(
-          LCG.deriveSingleShuffle(a),
+          LCG.swapWalk(a),
           .stack,
         )(b),
         ALPHABET,
@@ -122,7 +122,7 @@ main = () => {
     "iterateBinary shuffle!",
     100,
     pipe(
-      LCG.iterateBinary(10, LCG.deriveShuffle, ALPHABET),
+      LCG.iterateBinary(10, LCG.shuffle, ALPHABET),
     ),
   )
   IO.trace("mutation?", ALPHABET)
