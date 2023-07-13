@@ -2,13 +2,17 @@ import type { ComparisonResult } from "Compare"
 import type { Maybe } from "Maybe"
 
 import List from "List"
+import { floor, mod } from "Math"
+import { floatToInteger, integerToFloat } from "Number"
 import Tuple from "Tuple"
 
 import { LCG_A, LCG_C, LCG_M, SEED_MAX, SEED_MIN } from "./Constants"
 import { maybeSetIndex } from "./List"
-import { intGradient, modClamp, perturbation } from "./Logic"
 
 
+
+// This code partially based upon: https://github.com/purescript/purescript-lcg/blob/master/src/LCG/LCG.purs
+// which has a BSD-3 License - https://github.com/purescript/purescript-lcg/blob/master/LICENSE
 
 // A seed for the linear congruential generator. We omit a `Semiring`
 // instance because there is no `zero` value, as 0 is not an acceptable
@@ -32,8 +36,50 @@ instance Show Seed {
  */
 export alias SeededTuple a = #[Seed, a]
 
-// This code partially based upon: https://github.com/purescript/purescript-lcg/blob/master/src/LCG/LCG.purs
-// which has a BSD-3 License - https://github.com/purescript/purescript-lcg/blob/master/LICENSE
+/**
+ * This is the core logic for the "perturb" function
+ * It is fundamentally applying (b * n + a) % d
+ * @since 0.0.1
+ */
+perturbation :: Integer -> Integer -> Integer -> Integer -> Integer
+export perturbation = (n, b, a, d) => pipe(
+  map(integerToFloat),
+  where {
+    [b2, n2, a2] =>
+      floatToInteger(b2 * n2 + a2)
+
+    _ =>
+      0
+  },
+  mod($, d),
+)([b, n, a])
+
+/**
+ * Clamp a number between two boundaries, modularly
+ * @since 0.0.1
+ * @example
+ * modClamp(5, 10, 100)
+ */
+modClamp :: Integer -> Integer -> Integer -> Integer
+export modClamp = (min, max, x) => {
+  y = mod(x, max - min)
+  return y < min ? y + max : y
+}
+
+/**
+ * Get a value between two boundaries, low and high.
+ * Here the floating value is being used as a multiplier and this function is pure.
+ * But upstream this function is used within a PRNG and the supplied floating value changes
+ * on each generation.
+ * @since 0.0.1
+ * @example
+ * intGradient(1, 100, 0.5)
+ */
+intGradient :: Integer -> Integer -> Float -> Integer
+export intGradient = (low, high, f) => pipe(
+  floor,
+  floatToInteger,
+)((integerToFloat(high) - integerToFloat(low) + 1.0) * f + integerToFloat(low))
 
 /**
  * Make a Seed from an integer
@@ -252,10 +298,10 @@ export deriveChoice = (list, seed) => pipe(
 )(list)
 
 /**
- * shuffle a given array relative to a seed
+ * Shuffle an array on a single pass, relative to a seed
  * @since 0.0.1
  * @example
- * LCG.deriveShuffle(["ka", "dabra", "abra"], LCG.mkSeed(10))
+ * LCG.deriveSingleShuffle(["ka", "dabra", "abra"], LCG.mkSeed(10))
  */
 deriveSingleShuffle :: List a -> Seed -> { current :: Seed, stack :: List a }
 export deriveSingleShuffle = (list, seed) => pipe(
@@ -280,6 +326,12 @@ export deriveSingleShuffle = (list, seed) => pipe(
   ),
 )(list)
 
+/**
+ * Shuffle an array multiple times, relative to a seed
+ * @since 0.0.1
+ * @example
+ * LCG.deriveShuffle(["ka", "dabra", "abra"], LCG.mkSeed(10))
+ */
 deriveShuffle :: List a -> Seed -> List a
 export deriveShuffle = (list, seed) => pipe(
   deriveSingleShuffle(list),
@@ -289,28 +341,3 @@ export deriveShuffle = (list, seed) => pipe(
   (s) => deriveSingleShuffle(s.stack, s.current),
   .stack,
 )(seed)
-
-export alias SeededRandom = {
-  bool :: {} -> Boolean,
-  float :: {} -> Float,
-  int :: Integer -> Integer -> Integer,
-  pick :: List a -> Maybe a,
-  shuffle :: List a -> List a,
-}
-
-generateFromSeed :: Seed -> SeededRandom
-export generateFromSeed = (seed) => {
-  return {
-    int: deriveInt($, $, seed),
-    float: () => deriveFloat(seed),
-    bool: () => deriveBool(seed),
-    pick: deriveChoice($, seed),
-    shuffle: deriveShuffle($, seed),
-  }
-}
-
-generate :: Integer -> SeededRandom
-export generate = pipe(
-  mkSeed,
-  generateFromSeed,
-)
