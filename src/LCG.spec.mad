@@ -1,0 +1,189 @@
+import Number from "Number"
+import String from "String"
+import { assertEquals, test } from "Test"
+import Wish from "Wish"
+
+import {
+  LCG_A,
+  LCG_C,
+  LCG_M,
+  SEED_MAX,
+  SEED_MIN,
+  Seed,
+  deriveShuffle,
+  intGradient,
+  iterateBinary,
+  mapSeed,
+  mkSeed,
+  modClamp,
+  next,
+  perturbation,
+  stepN,
+  unSeed,
+} from "./LCG"
+
+
+
+test("mkSeed will clamp values over the max", () => assertEquals(Seed(2), mkSeed(SEED_MAX + 1)))
+test(
+  "mkSeed will clamp values under the min",
+  () => assertEquals(Seed(SEED_MAX), mkSeed(SEED_MIN - 1)),
+)
+test(
+  "unSeed",
+  () => {
+    x = 100
+    return assertEquals(x, unSeed(Seed(x)))
+  },
+)
+test("mapSeed", () => assertEquals(Seed(100), mapSeed((x) => x * 2, Seed(50))))
+test(
+  "step",
+  () => {
+    a = mkSeed(100)
+    b = next(a)
+    return assertEquals(unSeed(b), 4827100)
+  },
+)
+
+
+test(
+  "stepN",
+  () => pipe(
+    stepN(5),
+    assertEquals($, Seed(1708473988)),
+  )(mkSeed(100)),
+)
+
+
+test("perturbation", () => assertEquals(perturbation(LCG_C, LCG_A, 23, LCG_M), 23))
+test("perturbation zeroes", () => assertEquals(perturbation(0, 0, 0, 1), 0))
+test("perturbation ones", () => assertEquals(perturbation(1, 2, 3, 2), 1))
+
+test("modClamp - basic", () => assertEquals(2, modClamp(1, 2, 1)))
+test("modClamp - over", () => assertEquals(LCG_M + 1000, modClamp(LCG_A, LCG_M, 1000)))
+test("modClamp - under", () => assertEquals(3, modClamp(1, 21, 3)))
+
+test("intGradient", () => assertEquals(500, intGradient(0, 1000, 0.5)))
+
+test(
+  "iterateBinary",
+  () => {
+    seed = mkSeed(100)
+    ALPHABET = String.split("", "abcdefghjiklmnopqrtuvwxyz")
+    shuffled = iterateBinary(3, deriveShuffle, ALPHABET, seed)
+    return assertEquals(
+      shuffled,
+      [
+        [
+          "p",
+          "u",
+          "q",
+          "l",
+          "n",
+          "e",
+          "h",
+          "r",
+          "i",
+          "w",
+          "v",
+          "d",
+          "k",
+          "g",
+          "b",
+          "f",
+          "y",
+          "x",
+          "c",
+          "o",
+          "t",
+          "j",
+          "m",
+          "z",
+          "a",
+        ],
+        [
+          "f",
+          "o",
+          "y",
+          "d",
+          "p",
+          "n",
+          "r",
+          "x",
+          "w",
+          "v",
+          "t",
+          "l",
+          "j",
+          "h",
+          "u",
+          "e",
+          "z",
+          "m",
+          "q",
+          "b",
+          "c",
+          "i",
+          "k",
+          "a",
+          "g",
+        ],
+        [
+          "e",
+          "b",
+          "z",
+          "l",
+          "f",
+          "p",
+          "x",
+          "m",
+          "t",
+          "v",
+          "c",
+          "h",
+          "i",
+          "r",
+          "o",
+          "n",
+          "a",
+          "k",
+          "y",
+          "u",
+          "q",
+          "w",
+          "j",
+          "g",
+          "d",
+        ],
+        [
+          "n",
+          "u",
+          "a",
+          "h",
+          "e",
+          "l",
+          "c",
+          "k",
+          "m",
+          "v",
+          "q",
+          "r",
+          "w",
+          "x",
+          "b",
+          "p",
+          "g",
+          "j",
+          "z",
+          "o",
+          "y",
+          "t",
+          "i",
+          "d",
+          "f",
+        ],
+      ],
+    )
+  },
+)

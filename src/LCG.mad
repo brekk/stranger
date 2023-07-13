@@ -6,7 +6,6 @@ import { floor, mod } from "Math"
 import { floatToInteger, integerToFloat } from "Number"
 import Tuple from "Tuple"
 
-import { LCG_A, LCG_C, LCG_M, SEED_MAX, SEED_MIN } from "./Constants"
 import { maybeSetIndex } from "./List"
 
 
@@ -35,6 +34,45 @@ instance Show Seed {
  * @since 0.0.1 
  */
 export alias SeededTuple a = #[Seed, a]
+
+
+/**
+ * The *modulus*: a magic constant for the linear congruential generator.
+ * It is equal to 2^31 - 1, a Mersenne prime. It is useful for this value to
+ * be prime, because then the requirement of the initial seed being coprime
+ * to the modulus is satisfied when the seed is between 1 and LCG_M - 1.
+ * @since 0.0.1
+ */
+LCG_M :: Integer
+export LCG_M = 2147483647
+
+/**
+ * The minimum permissible Seed value
+ * @since 0.0.1
+ */
+SEED_MIN :: Integer
+export SEED_MIN = 1
+
+/**
+ * The maximum permissible Seed value
+ * @since 0.0.1
+ */
+SEED_MAX :: Integer
+export SEED_MAX = LCG_M - 1
+
+/**
+ * The *multiplier*: a magic constant for the linear congruential generator
+ * @since 0.0.1
+ */
+LCG_A :: Integer
+export LCG_A = 48271
+
+/**
+ * The *increment*: a magic constant for the linear congruential generator
+ * @since 0.0.1
+ */
+LCG_C :: Integer
+export LCG_C = 0
 
 /**
  * This is the core logic for the "perturb" function
@@ -109,10 +147,10 @@ export unSeed = where {
  * Transform a seed
  * @since 0.0.1
  * @example
- * LCG.seedMap((x) => x * 2, LCG.mkSeed(100)) == Seed(200)
+ * LCG.mapSeed((x) => x * 2, LCG.mkSeed(100)) == Seed(200)
  */
-seedMap :: (Integer -> Integer) -> Seed -> Seed
-export seedMap = (fn, seed) => pipe(
+mapSeed :: (Integer -> Integer) -> Seed -> Seed
+export mapSeed = (fn, seed) => pipe(
   unSeed,
   fn,
   Seed,
@@ -125,7 +163,7 @@ export seedMap = (fn, seed) => pipe(
  * LCG.perturb(LCG_C, LCG.mkSeed(100))
  */
 perturb :: Integer -> Seed -> Seed
-export perturb = (d, seed) => seedMap(perturbation($, LCG_A, d, LCG_M))(seed)
+export perturb = (d, seed) => mapSeed(perturbation($, LCG_A, d, LCG_M))(seed)
 
 
 /**
@@ -151,6 +189,9 @@ export accumulate = (fn, steps, initial) => pipe(
   List.range(0),
   List.reduce((agg, _) => fn(agg), initial),
 )(steps)
+
+stepN :: Integer -> Seed -> Seed
+export stepN = accumulate(next)
 
 
 /**

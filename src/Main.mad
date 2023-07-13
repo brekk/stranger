@@ -9,7 +9,6 @@ import String from "String"
 import Wish from "Wish"
 
 import LCG from "./LCG"
-import PRNG from "./PRNG"
 import { stringToInt, stringToIntJS } from "./String"
 
 
@@ -20,14 +19,6 @@ runLCG = (key, seedNumber, fn) => pipe(
   IO.trace(`LCG ${key}`),
 )(seedNumber)
 
-// run :: Inspect Seed => String -> Integer -> (Wish a Seed -> Wish a {}) -> {}
-run = (key, seedNumber, fn) => pipe(
-  PRNG.create,
-  map(IO.trace(`run ${key} -->`)),
-  fn,
-  Wish.fulfill((a) => { IO.trace("bad " ++ key, a) }, (b) => { IO.trace("good " ++ key, b) }),
-)(seedNumber)
-
 main = () => {
   runLCG(
     "START",
@@ -36,7 +27,6 @@ main = () => {
       LCG.iterateWithProof(10, LCG.deriveInt(1, 10)),
     ),
   )
-  IO.trace("yo", PRNG.create(stringToInt("shit")))
   IO.trace(
     "YO",
     pipe(
@@ -44,18 +34,6 @@ main = () => {
       LCG.iterateWithProof(10, LCG.deriveFloat),
       LCG.dropProof,
     )(100),
-  )
-  run("A", 100, map(LCG.deriveFloat))
-  run(
-    "B",
-    100,
-    pipe(
-      PRNG.step,
-      PRNG.step,
-      PRNG.step,
-      PRNG.step,
-      map(LCG.deriveFloat),
-    ),
   )
   runLCG(
     "LCG :: B",
@@ -68,49 +46,20 @@ main = () => {
       LCG.deriveFloat,
     ),
   )
-  run(
-    "C",
-    100,
-    pipe(
-      PRNG.stepN(4),
-      map(LCG.deriveFloat),
-    ),
-  )
-  run("D", 100, PRNG.stepN(4))
-  run(
-    "E",
-    100,
-    map(
-      pipe(
-        LCG.iterateWithProof(4, LCG.deriveFloat),
-        LCG.dropProof,
-      ),
-    ),
-  )
-  run(
-    "INTEGER (step 4)",
-    100,
-    pipe(
-      PRNG.stepN(4),
-      map(LCG.deriveInt(0, 100)),
-    ),
-  )
-  run(
+  runLCG(
     "INTEGERS",
     100,
-    map(
-      pipe(
-        LCG.iterateWithProof(10, LCG.deriveInt(0, 100)),
-        LCG.dropProof,
-      ),
+    pipe(
+      LCG.iterateWithProof(10, LCG.deriveInt(0, 100)),
+      LCG.dropProof,
     ),
   )
 
-  run(
+  runLCG(
     "booleans",
     100,
     pipe(
-      map(LCG.iterate(10, LCG.deriveBool)),
+      (LCG.iterate(10, LCG.deriveBool)),
     ),
   )
   runLCG(
