@@ -181,7 +181,7 @@ export next = perturb(LCG_C)
  * @example
  * pipe(
  *   LCG.mkSeed,
- *   LCG.accumulate(10, LCG.deriveBoolean)
+ *   LCG.accumulate(10, LCG.toBoolean)
  * )(100)
  */
 accumulate :: (a -> a) -> Integer -> a -> a
@@ -207,7 +207,7 @@ export seedPair = (seed, a) => #[seed, a]
  * Apply a transformation function to a given seed and capture it in a pair
  * @since 0.0.1
  * @example
- * LCG.mapWithProof(LCG.deriveBool, LCG.mkSeed(100))
+ * LCG.mapWithProof(LCG.toBool, LCG.mkSeed(100))
  */
 mapWithProof :: (Seed -> a) -> Seed -> SeededTuple a
 export mapWithProof = (fn, seed) => pipe(
@@ -294,10 +294,10 @@ export iterateBinary = (steps, fn, active, seed) => pipe(
  * Generate a floating value from a seed
  * @since 0.0.1
  * @example
- * LCG.deriveFloat(LCG.mkSeed(100))
+ * LCG.toFloat(LCG.mkSeed(100))
  */
-deriveFloat :: Seed -> Float
-export deriveFloat = pipe(
+toFloat :: Seed -> Float
+export toFloat = pipe(
   next,
   unSeed,
   (x) => (x / LCG_M),
@@ -307,11 +307,11 @@ export deriveFloat = pipe(
  * Generate a random integer between two integer bounds, relative to a seed
  * @since 0.0.1
  * @example
- * LCG.deriveInt(0, 100, LCG.mkSeed(10))
+ * LCG.toInt(0, 100, LCG.mkSeed(10))
  */
-deriveInt :: Integer -> Integer -> Seed -> Integer
-export deriveInt = (low, high, seed) => pipe(
-  deriveFloat,
+toInt :: Integer -> Integer -> Seed -> Integer
+export toInt = (low, high, seed) => pipe(
+  toFloat,
   intGradient(low, high),
 )(seed)
 
@@ -319,11 +319,11 @@ export deriveInt = (low, high, seed) => pipe(
  * Generate a random boolean relative to a seed
  * @since 0.0.1
  * @example
- * LCG.deriveBool(LCG.mkSeed(10))
+ * LCG.toBool(LCG.mkSeed(10))
  */
-deriveBool :: Seed -> Boolean
-export deriveBool = pipe(
-  deriveFloat,
+toBool :: Seed -> Boolean
+export toBool = pipe(
+  toFloat,
   (f) => f > 0.5,
 )
 
@@ -331,54 +331,54 @@ export deriveBool = pipe(
  * Pick a value from a list relative to a seed
  * @since 0.0.1
  * @example
- * LCG.deriveChoice([0,1,2,3,4,5], LCG.mkSeed(10))
+ * LCG.pick([0,1,2,3,4,5], LCG.mkSeed(10))
  */
-deriveChoice :: List a -> Seed -> Maybe a
-export deriveChoice = (list, seed) => pipe(
-  List.nth(deriveInt(0, List.length(list) - 1, seed)),
+pick :: List a -> Seed -> Maybe a
+export pick = (list, seed) => pipe(
+  List.nth(toInt(0, List.length(list) - 1, seed)),
 )(list)
 
+swap :: List a -> Seed -> { current :: Seed, stack :: List a }
+export swap = (list, prev) => {
+  bounded = toInt(0, List.length(list) - 1)
+  x = bounded(prev)
+  current = next(prev)
+  y = bounded(current)
+  fromStack = List.nth($, list)
+  nthX = fromStack(x)
+  nthY = fromStack(y)
+  return {
+    stack: pipe(
+      maybeSetIndex(y, nthX),
+      maybeSetIndex(x, nthY),
+    )(list),
+    current,
+  }
+}
+
 /**
- * Shuffle an array on a single pass, relative to a seed
+ * Walk an array, swapping two indices, relative to a seed
  * @since 0.0.1
  * @example
- * LCG.deriveSingleShuffle(["ka", "dabra", "abra"], LCG.mkSeed(10))
+ * LCG.swapWalk(["ka", "dabra", "abra"], LCG.mkSeed(10))
  */
-deriveSingleShuffle :: List a -> Seed -> { current :: Seed, stack :: List a }
-export deriveSingleShuffle = (list, seed) => pipe(
-  List.reduce(
-    (agg, _) => {
-      bounded = deriveInt(0, List.length(list))
-      x = bounded(agg.current)
-      current = next(agg.current)
-      y = bounded(current)
-      fromStack = List.nth($, agg.stack)
-      nthX = fromStack(x)
-      nthY = fromStack(y)
-      return {
-        stack: pipe(
-          maybeSetIndex(y, nthX),
-          maybeSetIndex(x, nthY),
-        )(agg.stack),
-        current,
-      }
-    },
-    { stack: list, current: seed },
-  ),
+swapWalk :: List a -> Seed -> { current :: Seed, stack :: List a }
+export swapWalk = (list, seed) => pipe(
+  List.reduce((agg, _) => swap(agg.stack, agg.current), { stack: list, current: seed }),
 )(list)
 
 /**
  * Shuffle an array multiple times, relative to a seed
  * @since 0.0.1
  * @example
- * LCG.deriveShuffle(["ka", "dabra", "abra"], LCG.mkSeed(10))
+ * LCG.shuffle(["ka", "dabra", "abra"], LCG.mkSeed(10))
  */
-deriveShuffle :: List a -> Seed -> List a
-export deriveShuffle = (list, seed) => pipe(
-  deriveSingleShuffle(list),
-  (s) => deriveSingleShuffle(s.stack, s.current),
-  (s) => deriveSingleShuffle(s.stack, s.current),
-  (s) => deriveSingleShuffle(s.stack, s.current),
-  (s) => deriveSingleShuffle(s.stack, s.current),
+shuffle :: List a -> Seed -> List a
+export shuffle = (list, seed) => pipe(
+  swapWalk(list),
+  (s) => swapWalk(s.stack, s.current),
+  (s) => swapWalk(s.stack, s.current),
+  (s) => swapWalk(s.stack, s.current),
+  (s) => swapWalk(s.stack, s.current),
   .stack,
 )(seed)
