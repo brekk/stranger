@@ -289,3 +289,28 @@ export deriveShuffle = (list, seed) => pipe(
   (s) => deriveSingleShuffle(s.stack, s.current),
   .stack,
 )(seed)
+
+export alias SeededRandom = {
+  bool :: {} -> Boolean,
+  float :: {} -> Float,
+  int :: Integer -> Integer -> Integer,
+  pick :: List a -> Maybe a,
+  shuffle :: List a -> List a,
+}
+
+generateFromSeed :: Seed -> SeededRandom
+export generateFromSeed = (seed) => {
+  return {
+    int: deriveInt($, $, seed),
+    float: () => deriveFloat(seed),
+    bool: () => deriveBool(seed),
+    pick: deriveChoice($, seed),
+    shuffle: deriveShuffle($, seed),
+  }
+}
+
+generate :: Integer -> SeededRandom
+export generate = pipe(
+  mkSeed,
+  generateFromSeed,
+)
