@@ -50,23 +50,3 @@ binaryOperation = (fn, a, mB) => map(fn(a), mB)
 // pickFrom :: List a -> Wish b Seed -> Wish b (Maybe a)
 // export pickFrom = (list, mSeed) => map(LCG.deriveChoice(list), mSeed)
 export pickFrom = binaryOperation(LCG.deriveChoice)
-
-// shuffle :: List a -> Wish b Seed -> Wish b (List a)
-export shuffle = binaryOperation(LCG.deriveShuffle)
-
-/*
-iterate :: Integer -> (Seed -> a) -> Wish b (List Seed) -> Wish b (List a)
-export iterate = (steps, fn, mSeed) => pipe(
-  List.range(0),
-  List.reduce(
-    (prev, _) => {
-      return map(
-        pipe(
-          chain(LCG.iterate(steps, fn)),
-        ),
-      )(prev)
-    },
-    mSeed,
-  ),
-)(steps)
-*/

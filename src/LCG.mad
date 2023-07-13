@@ -163,6 +163,23 @@ export iterateWithProof = (steps, fn, seed) => pipe(
   .stack,
 )(steps + 1)
 
+// iterateBinaryWithProof :: Integer -> (a -> Seed -> b) -> a -> Seed -> List (SeededTuple b)
+export iterateBinaryWithProof = (steps, fn, active, seed) => pipe(
+  List.range(0),
+  List.reduce(
+    (agg, _) => pipe(
+      mapWithProof(fn(agg.active)),
+      where {
+        #[newSeed, x] =>
+          ({ seed: newSeed, stack: [...agg.stack, #[newSeed, x]], active: x })
+      },
+    )(agg.seed),
+    { stack: [], seed, active },
+  ),
+  .stack,
+)(steps + 1)
+
+
 /**
  * Apply a transformation function to a seed multiple times and return the result
  * @since 0.0.1
@@ -177,6 +194,11 @@ export iterate = (steps, fn, seed) => pipe(
     iterateWithProof(steps, fn),
     dropProof,
   ),
+)(seed)
+
+export iterateBinary = (steps, fn, active, seed) => pipe(
+  iterateBinaryWithProof(steps, fn, active),
+  dropProof,
 )(seed)
 
 // CONVERTERS
@@ -235,14 +257,14 @@ export deriveChoice = (list, seed) => pipe(
  * @example
  * LCG.deriveShuffle(["ka", "dabra", "abra"], LCG.mkSeed(10))
  */
-deriveShuffle :: List a -> Seed -> List a
-export deriveShuffle = (list, seed) => pipe(
+deriveSingleShuffle :: List a -> Seed -> { current :: Seed, stack :: List a }
+export deriveSingleShuffle = (list, seed) => pipe(
   List.reduce(
     (agg, _) => {
-      max = List.length(list) - 1
-      x = deriveInt(1, max, agg.current)
+      bounded = deriveInt(0, List.length(list))
+      x = bounded(agg.current)
       current = next(agg.current)
-      y = deriveInt(1, max, current)
+      y = bounded(current)
       fromStack = List.nth($, agg.stack)
       nthX = fromStack(x)
       nthY = fromStack(y)
@@ -256,5 +278,14 @@ export deriveShuffle = (list, seed) => pipe(
     },
     { stack: list, current: seed },
   ),
-  .stack,
 )(list)
+
+deriveShuffle :: List a -> Seed -> List a
+export deriveShuffle = (list, seed) => pipe(
+  deriveSingleShuffle(list),
+  (s) => deriveSingleShuffle(s.stack, s.current),
+  (s) => deriveSingleShuffle(s.stack, s.current),
+  (s) => deriveSingleShuffle(s.stack, s.current),
+  (s) => deriveSingleShuffle(s.stack, s.current),
+  .stack,
+)(seed)
