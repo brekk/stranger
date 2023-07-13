@@ -143,10 +143,30 @@ main = () => {
   ALPHABET = String.split("", "abcdefghijklmnopqrstuvwxyz")
   // shuffle sucks in LCG.iterate
   runLCG(
-    "iterate shuffle!",
+    "iterate single shuffle!",
     100,
     pipe(
-      LCG.iterate(10, LCG.deriveShuffle(ALPHABET)),
+      LCG.iterate(
+        10,
+        pipe(
+          LCG.deriveSingleShuffle(ALPHABET),
+          .stack,
+        ),
+      ),
+    ),
+  )
+  runLCG(
+    "iterateBinary single shuffle!",
+    100,
+    pipe(
+      LCG.iterateBinary(
+        10,
+        (a, b) => pipe(
+          LCG.deriveSingleShuffle(a),
+          .stack,
+        )(b),
+        ALPHABET,
+      ),
     ),
   )
   runLCG(
@@ -157,15 +177,6 @@ main = () => {
     ),
   )
   IO.trace("mutation?", ALPHABET)
-  /*
-                      run(
-                        "iterate shuffle!",
-                        100,
-                        pipe(
-                          PRNG.iterate(10, LCG.deriveShuffle(String.split("", "abcdefghijklmnopqrstuvwxyz"))),
-                        ),
-                      )
-                      */
 }
 
 /*
