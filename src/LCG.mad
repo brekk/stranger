@@ -1,12 +1,12 @@
-import type { ComparisonResult } from "Compare"
 import type { Maybe } from "Maybe"
 
+import ByteArray from "ByteArray"
 import List from "List"
 import { floor, mod } from "Math"
-import { floatToInteger, integerToFloat } from "Number"
+import { byteToInteger, floatToInteger, integerToFloat } from "Number"
 import Tuple from "Tuple"
 
-import { maybeSetIndex } from "./List"
+import { setMaybe } from "./List"
 
 
 
@@ -18,16 +18,6 @@ import { maybeSetIndex } from "./List"
 // seed for the generator.
 export type Seed = Seed(Integer)
 
-interface Eq a => Seed a {
-  compare :: a -> a -> ComparisonResult
-}
-
-instance Show Seed {
-  show = (seed) => where(seed) {
-    Seed(i) =>
-      show(i)
-  }
-}
 
 /**
  * A SeededTuple is used to encapsulate a value relative to a seed
@@ -80,17 +70,11 @@ export LCG_C = 0
  * @since 0.0.1
  */
 perturbation :: Integer -> Integer -> Integer -> Integer -> Integer
-export perturbation = (n, b, a, d) => pipe(
-  map(integerToFloat),
-  where {
-    [b2, n2, a2] =>
-      floatToInteger(b2 * n2 + a2)
+export perturbation = (n, b, a, d) => mod(
+  floatToInteger(integerToFloat(b) * integerToFloat(n) + integerToFloat(a)),
+  d,
+)
 
-    _ =>
-      0
-  },
-  mod($, d),
-)([b, n, a])
 
 /**
  * Clamp a number between two boundaries, modularly
@@ -129,6 +113,19 @@ mkSeed :: Integer -> Seed
 export mkSeed = pipe(
   modClamp(SEED_MIN, SEED_MAX),
   Seed,
+)
+
+stringToInt :: String -> Integer
+export stringToInt = pipe(
+  ByteArray.fromString,
+  ByteArray.reduce((hash, byte) => hash + (byte << 6) + (byte << 16), 0),
+  byteToInteger,
+)
+
+mkSeedFromString :: String -> Seed
+export mkSeedFromString = pipe(
+  stringToInt,
+  mkSeed,
 )
 
 /**
@@ -349,8 +346,8 @@ export swap = (list, prev) => {
   nthY = fromStack(y)
   return {
     stack: pipe(
-      maybeSetIndex(y, nthX),
-      maybeSetIndex(x, nthY),
+      setMaybe(y, nthX),
+      setMaybe(x, nthY),
     )(list),
     current,
   }

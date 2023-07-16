@@ -1,0 +1,18 @@
+import List from "List"
+import { Just, Nothing } from "Maybe"
+import String from "String"
+import { assertEquals, test } from "Test"
+
+import { setMaybe } from "./List"
+
+
+
+test(
+  "setMaybe - good",
+  () => assertEquals(["a", "b", "o", "d", "e"], setMaybe(2, Just("o"), String.split("", "abcde"))),
+)
+
+test(
+  "setMaybe - bad",
+  () => assertEquals(["a", "b", "c", "d", "e"], setMaybe(2, Nothing, String.split("", "abcde"))),
+)

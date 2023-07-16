@@ -1,3 +1,4 @@
+import Math from "Math"
 import Number from "Number"
 import String from "String"
 import { assertEquals, test } from "Test"
@@ -14,6 +15,7 @@ import {
   iterateBinary,
   mapSeed,
   mkSeed,
+  mkSeedFromString,
   modClamp,
   next,
   perturbation,
@@ -60,103 +62,24 @@ test("perturbation", () => assertEquals(perturbation(LCG_C, LCG_A, 23, LCG_M), 2
 test("perturbation zeroes", () => assertEquals(perturbation(0, 0, 0, 1), 0))
 test("perturbation ones", () => assertEquals(perturbation(1, 2, 3, 2), 1))
 
-test("modClamp - basic", () => assertEquals(2, modClamp(1, 2, 1)))
-test("modClamp - over", () => assertEquals(LCG_M + 1000, modClamp(LCG_A, LCG_M, 1000)))
-test("modClamp - under", () => assertEquals(3, modClamp(1, 21, 3)))
+threeClamped = modClamp($, $, 3)
+test("modClamp - under", () => assertEquals(24, threeClamped(7, 21)))
+test("modClamp - over", () => assertEquals(3, threeClamped(1, 1000)))
 
 test("intGradient", () => assertEquals(500, intGradient(0, 1000, 0.5)))
 
 test(
   "iterateBinary",
   () => {
-    seed = mkSeed(100)
+    seed = mkSeedFromString("iterateBinary")
     ALPHABET = String.split("", "abcdefghjiklmnopqrtuvwxyz")
-    shuffled = iterateBinary(2, shuffle, ALPHABET, seed)
+    shuffled = pipe(
+      iterateBinary(2, shuffle, ALPHABET),
+      map(String.join("")),
+    )(seed)
     return assertEquals(
       shuffled,
-      [
-        [
-          "y",
-          "n",
-          "o",
-          "b",
-          "u",
-          "x",
-          "z",
-          "i",
-          "w",
-          "h",
-          "f",
-          "j",
-          "a",
-          "e",
-          "p",
-          "q",
-          "t",
-          "l",
-          "c",
-          "k",
-          "v",
-          "d",
-          "m",
-          "g",
-          "r",
-        ],
-        [
-          "g",
-          "e",
-          "p",
-          "n",
-          "k",
-          "m",
-          "r",
-          "h",
-          "a",
-          "i",
-          "x",
-          "w",
-          "d",
-          "u",
-          "q",
-          "t",
-          "c",
-          "j",
-          "o",
-          "f",
-          "v",
-          "b",
-          "y",
-          "z",
-          "l",
-        ],
-        [
-          "z",
-          "u",
-          "q",
-          "e",
-          "f",
-          "y",
-          "l",
-          "n",
-          "i",
-          "h",
-          "m",
-          "a",
-          "b",
-          "k",
-          "t",
-          "c",
-          "o",
-          "w",
-          "p",
-          "x",
-          "v",
-          "d",
-          "g",
-          "r",
-          "j",
-        ],
-      ],
+      ["wicuqyvkedmatnzjhrbfgoxlp", "odcfhlgmqutibnpekrywvzxaj", "yucwkavthfbdonjqmrlzgpxie"],
     )
   },
 )
