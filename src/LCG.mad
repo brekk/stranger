@@ -229,7 +229,7 @@ export dropProof = (list) => map(Tuple.snd, list)
  * Apply mapSeededStep multiple times in a row
  * @since 0.0.1
  * @example
- * PRNG.iterateWithProof(10, PRNG.randomBool, PRNG.create(100))
+ * LCG.iterateWithProof(10, LCG.toBool, LCG.mkSeed(100))
  */
 iterateWithProof :: Integer -> (Seed -> a) -> Seed -> List (SeededTuple a)
 export iterateWithProof = (steps, fn, seed) => pipe(
@@ -267,10 +267,11 @@ export iterateBinaryWithProof = (steps, fn, active, seed) => pipe(
 /**
  * Apply a transformation function to a seed multiple times and return the result
  * @since 0.0.1
+ * @example
  * pipe(
- *   PRNG.create,
- *   iterate(10, PRNG.randomFloat)
- * )(100
+ *   LCG.mkSeed,
+ *   iterate(10, LCG.toFloat)
+ * )(100)
  */
 iterate :: Integer -> (Seed -> b) -> Seed -> List b
 export iterate = (steps, fn, seed) => pipe(
@@ -280,6 +281,15 @@ export iterate = (steps, fn, seed) => pipe(
   ),
 )(seed)
 
+/**
+ * Apply a binary transformation function to a seed multiple times and return the result
+ * @since 0.0.1
+ * @example
+ * pipe(
+ *   LCG.mkSeed,
+ *   iterateBinary(10, LCG.shuffle, String.split("", "madlib"))
+ * )(100)
+ */
 export iterateBinary = (steps, fn, active, seed) => pipe(
   iterateBinaryWithProof(steps, fn, active),
   dropProof,
@@ -335,6 +345,12 @@ export pick = (list, seed) => pipe(
   List.nth(toInt(0, List.length(list) - 1, seed)),
 )(list)
 
+/**
+ * Swap the value of two indices in a list, relative to a seed
+ * @since 0.0.1
+ * @example
+ * LCG.swap([0,1,2,3,4,5], LCG.mkSeed(10))
+ */
 swap :: List a -> Seed -> { current :: Seed, stack :: List a }
 export swap = (list, prev) => {
   bounded = toInt(0, List.length(list) - 1)
@@ -354,7 +370,7 @@ export swap = (list, prev) => {
 }
 
 /**
- * Walk an array, swapping two indices, relative to a seed
+ * Walk an array, swapping two indices for each iteration, relative to a seed
  * @since 0.0.1
  * @example
  * LCG.swapWalk(["ka", "dabra", "abra"], LCG.mkSeed(10))
