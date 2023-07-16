@@ -1,0 +1,16 @@
+import IO from "IO"
+import String from "String"
+
+import LCG from "./LCG"
+
+
+
+main = () => {
+  pipe(
+    LCG.mkSeedFromString,
+    LCG.iterate(1000, LCG.toInt(0, 9)),
+    map((z) => `${show(z)}\n`),
+    String.join(""),
+    IO.put,
+  )("sparklines are cool")
+}
