@@ -247,7 +247,7 @@ export iterateWithProof = (steps, fn, seed) => pipe(
   .stack,
 )(steps + 1)
 
-// iterateBinaryWithProof :: Integer -> (a -> Seed -> b) -> a -> Seed -> List (SeededTuple b)
+iterateBinaryWithProof :: Integer -> (a -> Seed -> a) -> a -> Seed -> List (SeededTuple a)
 export iterateBinaryWithProof = (steps, fn, active, seed) => pipe(
   List.range(0),
   List.reduce(

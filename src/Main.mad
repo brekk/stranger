@@ -9,7 +9,6 @@ import String from "String"
 import Wish from "Wish"
 
 import LCG from "./LCG"
-import { stringToInt, stringToIntJS } from "./String"
 
 
 
